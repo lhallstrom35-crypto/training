@@ -22,7 +22,7 @@
 body{margin:0;background:var(--bg);color:var(--text-primary);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding-bottom:calc(80px + env(safe-area-inset-bottom))}
 header{position:sticky;top:0;z-index:5;background:rgba(17,17,16,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:calc(env(safe-area-inset-top) + 12px) 16px 12px;border-bottom:1px solid var(--border)}
 header h1{margin:0 auto;max-width:720px;font-size:20px}
-main{max-width:720px;margin:0 auto;padding:16px}
+main{max-width:720px;margin:0 auto;padding:16px 16px 70px}
 nav{position:fixed;bottom:0;left:0;right:0;z-index:5;display:flex;background:var(--surface-1);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom)}
 nav button{flex:1;background:none;border:0;color:var(--text-muted);padding:9px 0 11px;font:inherit;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer}
 nav button .ic{font-size:20px;line-height:1.2}
@@ -75,6 +75,33 @@ svg text{fill:var(--text-muted);font-size:11px;font-family:inherit}
 .mbar .r{color:var(--text-secondary);font-size:12px;text-align:right}
 #tip{position:fixed;z-index:20;pointer-events:none;background:#2e2e2c;border:1px solid var(--border);color:var(--text-primary);border-radius:8px;padding:7px 10px;font-size:13px;white-space:pre-line;max-width:260px;box-shadow:0 4px 16px rgba(0,0,0,.4)}
 .toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--surface-2);border:1px solid var(--border);padding:10px 16px;border-radius:999px;z-index:30;font-size:14px}
+[hidden]{display:none!important}
+.sheet{position:fixed;inset:0;z-index:35;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+.sheet-head{padding:12px 16px;border-bottom:1px solid var(--border);max-width:720px;width:100%;margin:0 auto}
+.pbody{flex:1;display:flex;flex-direction:column;min-height:0;max-width:720px;width:100%;margin:0 auto}
+.gtabs{display:flex;gap:6px;overflow-x:auto;padding:10px 16px;border-bottom:1px solid var(--border);-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.gtabs::-webkit-scrollbar{display:none}
+.gtabs .chip{white-space:nowrap;flex:none}
+.plist{flex:1;overflow-y:auto;padding:4px 16px calc(20px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+.pitem{display:flex;align-items:center;gap:12px;padding:11px 2px;border-bottom:1px solid var(--grid);cursor:pointer;user-select:none}
+.pitem .box{width:26px;height:26px;border-radius:7px;border:2px solid var(--border);flex:none;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff}
+.pitem.on .box{background:var(--accent);border-color:var(--accent)}
+.pitem.done{opacity:.5;cursor:default}
+.pitem.done .box{background:var(--surface-2)}
+.pitem .nm{flex:1}
+.banner{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#2a2416;border:1px solid #5a4a20;border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:14px}
+.pr{font-size:11px;font-weight:600;background:#3a3016;color:#f2c94c;border-radius:999px;padding:1px 7px;white-space:nowrap}
+.card.due{border-color:var(--accent)}
+.badge{background:var(--accent);color:#fff;font-size:12px;font-weight:600;border-radius:999px;padding:2px 10px;white-space:nowrap}
+.modal{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:24px}
+.modal-box{background:var(--surface-1);border:1px solid var(--border);border-radius:16px;padding:22px;max-width:360px;width:100%;text-align:center}
+.modal-box p{margin:6px 0;color:var(--text-secondary)}
+.fab{position:fixed;right:16px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:6;min-width:52px;height:52px;border-radius:26px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-primary);font:inherit;font-size:20px;font-weight:600;padding:0 14px;box-shadow:0 4px 16px rgba(0,0,0,.45);cursor:pointer}
+.fab.running{background:var(--accent);border-color:var(--accent);font-size:17px;font-variant-numeric:tabular-nums}
+.fab.done{background:#1baf7a;border-color:#1baf7a;font-size:16px}
+.timer{position:fixed;right:16px;bottom:calc(136px + env(safe-area-inset-bottom));z-index:7;background:var(--surface-1);border:1px solid var(--border);border-radius:14px;padding:14px;box-shadow:0 8px 24px rgba(0,0,0,.5);text-align:center}
+.timer .row{justify-content:center}
+.tbig{font-size:44px;font-weight:700;font-variant-numeric:tabular-nums;margin-bottom:8px}
 details summary{cursor:pointer;color:var(--text-secondary);font-size:13px}
 table{width:100%;border-collapse:collapse;font-size:13px}
 td,th{text-align:left;padding:4px 6px;border-top:1px solid var(--grid)}
@@ -86,11 +113,14 @@ th{color:var(--text-muted);font-weight:500}
 <main id="view"></main>
 <nav>
   <button data-tab="log"><span class="ic">＋</span>Logga</button>
+  <button data-tab="suggest"><span class="ic">★</span>Förslag</button>
   <button data-tab="history"><span class="ic">☰</span>Historik</button>
   <button data-tab="stats"><span class="ic">📈</span>Statistik</button>
   <button data-tab="data"><span class="ic">⚙︎</span>Data</button>
 </nav>
 <div id="tip" hidden></div>
+<button id="timerBtn" class="fab" aria-label="Vilotimer">⏱</button>
+<div id="timer" class="timer" hidden></div>
 <datalist id="exlist"></datalist>
 
 <script type="text/plain" id="seed">
@@ -290,7 +320,23 @@ function parseLog(text,endISO){
 const KEY='traningslogg.v1';
 let db=null;
 try{db=JSON.parse(localStorage.getItem(KEY))}catch(e){}
-if(!db||!Array.isArray(db.sessions)){db={sessions:[]};importText(document.getElementById('seed').textContent,'2026-10-05');save()}
+const DEFAULT_TEMPLATES=[
+  {id:'t-bb',name:'Bröst & bi',muscles:['Bröst','Biceps','Mage','Sneda mage'],items:[
+    {name:'Incline maskin',sets:3,reps:'6-8'},{name:'Chest press',sets:3,reps:'8-10'},{name:'Flyes',sets:3,reps:'10-12'},
+    {name:'Sittande curl maskin',sets:3,reps:'8-10'},{name:'Hammer curl',sets:3,reps:'10-12'},{name:'Weighted ab',sets:3,reps:'12-15'}]},
+  {id:'t-rt',name:'Rygg & tri',muscles:['Rygg','Triceps'],items:[
+    {name:'Chest supported row',sets:3,reps:'8-10'},{name:'Wide grip row',sets:3,reps:'8-12'},{name:'Rows maskin',sets:3,reps:'8-12'},
+    {name:'Rev fly',sets:3,reps:'12-15'},{name:'Overhead tri',sets:3,reps:'10-12'},{name:'Triceps one arm',sets:3,reps:'10-12'}]},
+  {id:'t-ben',name:'Ben & core',muscles:['Ben','Vader','Core'],items:[
+    {name:'Bulgarian split squat',sets:3,reps:'8-10'},{name:'Utfall',sets:2,reps:'20'},{name:'Vadpress',sets:3,reps:'12-15'},
+    {name:'Hängande leg raise',sets:3,reps:'10-12'},{name:'Planka',sets:3,reps:'45 s'}]},
+  {id:'t-ax',name:'Axlar & underarmar',muscles:['Axlar','Underarmar'],items:[
+    {name:'Axelpress',sets:3,reps:'8-10'},{name:'Side delt',sets:3,reps:'12-15'},{name:'Rear delt',sets:3,reps:'12-15'},
+    {name:'Kelso shrug',sets:3,reps:'10-12'},{name:'Underarmscurl',sets:3,reps:'15'}]},
+];
+function migrate(){if(!Array.isArray(db.templates))db.templates=JSON.parse(JSON.stringify(DEFAULT_TEMPLATES))}
+if(!db||!Array.isArray(db.sessions)){db={sessions:[]};importText(document.getElementById('seed').textContent,'2026-10-05')}
+migrate();save();
 
 function save(){localStorage.setItem(KEY,JSON.stringify(db))}
 function sortSessions(){db.sessions.sort((a,b)=>b.date.localeCompare(a.date))}
@@ -336,6 +382,28 @@ function exerciseNames(){
   const c={};for(const s of db.sessions)for(const e of s.exercises){const k=e.name.toLowerCase();c[k]=c[k]||{name:e.name,n:0,weighted:0};c[k].n++;if(isFinite(maxW(e)))c[k].weighted++}
   return Object.values(c).sort((a,b)=>b.n-a.n);
 }
+function findRecords(s){ // jämför mot alla andra pass
+  const out=[];
+  for(const e of s.exercises){
+    const w=maxW(e),k=e.name.toLowerCase();if(!isFinite(w))continue;
+    let best=-Infinity;
+    for(const o of db.sessions)if(o.id!==s.id)for(const oe of o.exercises)if(oe.name.toLowerCase()===k)best=Math.max(best,maxW(oe));
+    if(isFinite(best)&&w>best)out.push(`${e.name}: ${fmtNum(w)} kg (förra rekordet ${fmtNum(best)} kg)`);
+  }
+  return out;
+}
+function celebrate(lines){
+  const m=document.createElement('div');m.className='modal';
+  m.innerHTML=`<div class="modal-box"><div style="font-size:52px">🏆</div><h2>Nytt rekord!</h2>${lines.map(l=>`<p>${esc(l)}</p>`).join('')}<button class="btn primary block mt">Grymt 💪</button></div>`;
+  m.onclick=e=>{if(e.target===m||e.target.tagName==='BUTTON')m.remove()};
+  document.body.appendChild(m);
+}
+function backupBanner(){
+  if(!db.sessions.length)return'';
+  const d=db.lastBackup?diffDays(db.lastBackup,todayISO()):null;
+  if(d!==null&&d<7)return'';
+  return `<div class="banner"><span>💾 ${d===null?'Du har inte sparat någon backup än.':`${d} dagar sedan senaste backup.`}</span><button class="btn small primary" data-act="exportJson">Spara backup</button></div>`;
+}
 function refreshDatalist(){document.getElementById('exlist').innerHTML=exerciseNames().map(x=>`<option value="${esc(x.name)}">`).join('')}
 
 /* ---------- Navigering ---------- */
@@ -343,7 +411,7 @@ const view=document.getElementById('view');
 let tab='log';
 function go(t){tab=t;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));document.getElementById('tip').hidden=true;render();scrollTo(0,0)}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.tab));
-function render(){({log:renderLog,history:renderHistory,stats:renderStats,data:renderData})[tab]()}
+function render(){({log:renderLog,suggest:renderSuggest,history:renderHistory,stats:renderStats,data:renderData})[tab]()}
 
 /* ---------- Logga ---------- */
 const newDraft=()=>({id:null,date:todayISO(),muscles:[],exercises:[],cardio:[],notes:''});
@@ -374,7 +442,7 @@ function exHTML(e,i){
     ${e.sets.map((x,j)=>`<div class="setrow">
       <input data-f="ex.${i}.sets.${j}.w" value="${x.w!=null?fmtNum(x.w):''}" inputmode="decimal" placeholder="kg">
       <input data-f="ex.${i}.sets.${j}.sets" value="${x.sets??''}" inputmode="numeric" placeholder="–">
-      <input data-f="ex.${i}.sets.${j}.reps" value="${esc(x.reps??'')}" placeholder="–">
+      <input data-f="ex.${i}.sets.${j}.reps" value="${esc(x.reps??'')}" placeholder="${esc(x.target||'–')}">
       <button class="btn small" data-act="delSet" data-i="${i}" data-j="${j}" aria-label="Ta bort">✕</button></div>`).join('')}
     <button class="btn small" data-act="addSet" data-i="${i}">+ Vikt / set</button>
   </div>`;
@@ -382,7 +450,11 @@ function exHTML(e,i){
 function renderLog(){
   refreshDatalist();
   const d=draft,editing=!!d.id;
-  view.innerHTML=`<div class="card">
+  view.innerHTML=`${backupBanner()}
+  ${editing?'':`<div class="card"><h2>Snabbstart</h2>
+    <div class="chips">${db.templates.map(t=>`<span class="chip" data-act="useTpl" data-id="${t.id}">${esc(t.name)}</span>`).join('')}</div>
+    <div class="muted small mt">Fyller i övningarna med dina senaste vikter. Ta bort det du inte kör.</div></div>`}
+  <div class="card">
     <h2>${editing?'Redigera pass':'Nytt pass'}</h2>
     <label>Datum</label><input type="date" data-f="date" value="${d.date}">
     <h3>Snabbinmatning</h3>
@@ -392,7 +464,7 @@ function renderLog(){
     <div class="chips">${MUSCLES.map(m=>`<span class="chip ${d.muscles.includes(m)?'on':''}" data-muscle="${m}">${m}</span>`).join('')}</div>
     <h3>Övningar</h3>
     ${d.exercises.map(exHTML).join('')}
-    <button class="btn small" data-act="addEx">+ Övning</button>
+    <button class="btn small" data-act="addEx">+ Lägg till övningar</button>
     <h3>Kondition</h3>
     ${d.cardio.map((c,i)=>`<div class="row mb"><input data-f="cardio.${i}.type" value="${esc(c.type)}" placeholder="Typ, t.ex. Löpband"><input data-f="cardio.${i}.kcal" value="${c.kcal??''}" inputmode="numeric" placeholder="kcal" style="width:90px"><button class="btn small" data-act="delCardio" data-i="${i}" aria-label="Ta bort">✕</button></div>`).join('')}
     <button class="btn small" data-act="addCardio">+ Kondition</button>
@@ -400,6 +472,7 @@ function renderLog(){
     <textarea data-f="notes" placeholder="Hur kändes det?">${esc(d.notes)}</textarea>
     <div class="row" style="margin-top:16px"><button class="btn primary block" data-act="save">${editing?'Spara ändringar':'Spara pass'}</button>
     ${editing?'<button class="btn" data-act="cancel">Avbryt</button>':''}</div>
+    ${d.exercises.length&&!editing?'<div class="row mt"><button class="btn small" data-act="saveTpl">☆ Spara som mall</button><button class="btn small" data-act="clearDraft">Rensa formuläret</button></div>':''}
   </div>`;
 }
 function setPath(path,val){
@@ -423,7 +496,7 @@ view.addEventListener('click',e=>{
   const b=e.target.closest('[data-act]');if(!b)return;
   const i=+b.dataset.i,j=+b.dataset.j;
   const acts={
-    addEx(){draft.exercises.push({name:'',sets:[{w:null}]});render();const ins=view.querySelectorAll('[data-f$=".name"]');ins[ins.length-1].focus()},
+    addEx(){openPicker()},
     delEx(){draft.exercises.splice(i,1);render()},
     addSet(){const s=draft.exercises[i].sets;const p=s[s.length-1];s.push(p?{...p,note:undefined}:{w:null});render()},
     delSet(){draft.exercises[i].sets.splice(j,1);render()},
@@ -439,15 +512,30 @@ view.addEventListener('click',e=>{
     },
     save(){
       const s={...draft,id:draft.id||uid()};
-      s.exercises=s.exercises.map(e=>({...e,name:cap(e.name.trim()),sets:e.sets.filter(x=>x.w!=null||x.sets||x.reps)})).filter(e=>e.name);
+      s.exercises=s.exercises.map(e=>({...e,name:cap(e.name.trim()),sets:e.sets.filter(x=>x.w!=null||x.sets||x.reps).map(({target,...x})=>x)})).filter(e=>e.name);
       s.cardio=s.cardio.filter(c=>c.type||c.kcal);
       if(!s.date){toast('Välj datum');return}
       if(!s.muscles.length&&!s.exercises.length&&!s.cardio.length&&!s.notes){toast('Passet är tomt');return}
+      const prs=findRecords(s);
       db.sessions=db.sessions.filter(x=>x.id!==s.id);db.sessions.push(s);sortSessions();save();
       const wasEdit=!!draft.id;draft=newDraft();
-      toast(wasEdit?'Ändringar sparade':'Pass sparat 💪');
+      if(prs.length)celebrate(prs);else toast(wasEdit?'Ändringar sparade':'Pass sparat 💪');
       wasEdit?go('history'):render();
     },
+    useTpl(){
+      const t=db.templates.find(t=>t.id===b.dataset.id);if(!t)return;
+      if(tab!=='log'){draft=newDraft()}
+      loadTemplate(t);go('log');toast(`${t.name} inlagt – justera och spara`);
+    },
+    saveTpl(){
+      const name=prompt('Namn på mallen, t.ex. "Bröst & bi tung":');if(!name||!name.trim())return;
+      db.templates.push({id:uid(),name:name.trim(),muscles:[...draft.muscles],
+        items:draft.exercises.filter(e=>e.name.trim()).map(e=>({name:cap(e.name.trim()),sets:(e.sets[0]&&e.sets[0].sets)||null,reps:(e.sets[0]&&(e.sets[0].reps||e.sets[0].target))||''}))});
+      save();render();toast('Mall sparad');
+    },
+    delTpl(){if(confirm('Ta bort mallen?')){db.templates=db.templates.filter(t=>t.id!==b.dataset.id);save();render()}},
+    resetTpl(){if(confirm('Lägga tillbaka standardmallarna? Dina egna mallar behålls.')){const ids=new Set(db.templates.map(t=>t.id));DEFAULT_TEMPLATES.forEach(t=>{if(!ids.has(t.id))db.templates.push(JSON.parse(JSON.stringify(t)))});save();toast('Standardmallar återställda')}},
+    clearDraft(){if(confirm('Rensa formuläret?')){draft=newDraft();render()}},
     cancel(){draft=newDraft();go('history')},
     edit(){draft=JSON.parse(JSON.stringify(db.sessions.find(s=>s.id===b.dataset.id)));go('log')},
     del(){if(confirm('Ta bort passet?')){db.sessions=db.sessions.filter(s=>s.id!==b.dataset.id);save();render()}},
@@ -457,10 +545,15 @@ view.addEventListener('click',e=>{
       let c=0;for(const s of db.sessions)for(const e of s.exercises)if(e.name.toLowerCase()===old.toLowerCase()){e.name=cap(nn.trim());c++}
       selEx=nn.trim().toLowerCase();save();render();toast(`${c} pass uppdaterade`);
     },
-    exportJson(){
-      const a=document.createElement('a');
-      a.href=URL.createObjectURL(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}));
-      a.download=`traningslogg-${todayISO()}.json`;a.click();
+    async exportJson(){
+      const name=`traningslogg-${todayISO()}.json`,blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+      const file=new File([blob],name,{type:'application/json'});
+      try{
+        // På iPhone öppnas dela-menyn → "Spara i Filer" → iCloud Drive
+        if(navigator.canShare&&navigator.canShare({files:[file]}))await navigator.share({files:[file],title:'Träningslogg backup'});
+        else{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click()}
+        db.lastBackup=todayISO();save();toast('Backup sparad ✓');render();
+      }catch(err){if(err.name!=='AbortError')toast('Kunde inte spara backup')}
     },
     importJson(){document.getElementById('jsonfile').click()},
     importText(){
@@ -475,7 +568,114 @@ view.addEventListener('click',e=>{
   acts[b.dataset.act]&&acts[b.dataset.act]();
 });
 
+/* ---------- Övningsväljare ---------- */
+// "Namn|Muskelgrupp" när övningen ska räknas till en annan grupp än kategorin
+const CATALOG={
+  'Bröst':['Incline maskin','Incline smith','Incline hantel','Chest press','Bänkpress','Flyes','Cable flyes','Pec deck','Dips'],
+  'Rygg':['Chest supported row','Wide grip row','Rows maskin','Latsdrag','Pull-ups','Hantelrodd','Rev fly','Kelso shrug','Marklyft'],
+  'Biceps':['Sittande curl maskin','Bi maskin','Barbell curl','Hammer curl','Incline bi','Cable curl','Preacher curl'],
+  'Triceps':['Overhead tri','Triceps one arm','Triceps pushdown','Skull crushers','Dips|Triceps'],
+  'Axlar':['Axelpress','Side delt','Rear delt','Face pulls','Front raises'],
+  'Ben':['Bulgarian split squat','Utfall','Knäböj','Benpress','Lårcurl','Benspark','Rumänsk marklyft'],
+  'Vader':['Vadpress','Stående vadpress'],
+  'Mage & core':['Weighted ab|Mage','Cable crunch|Mage','Obq stående|Sneda mage','Russian twist|Sneda mage','Sidoplanka|Sneda mage','Hängande leg raise|Core','Leg raise|Core','Planka|Core'],
+  'Underarmar':['Underarmscurl','Omvänd curl','Farmers walk'],
+};
+const GROUPS=[...Object.keys(CATALOG),'Övrigt'];
+const groupOfMuscle=m=>['Mage','Sneda mage','Core'].includes(m)?'Mage & core':m;
+const muscleOfGroup=g=>g==='Mage & core'?'Mage':g==='Övrigt'?null:g;
+function buildCatalog(){
+  const cat={},seen=new Set(),usage={};GROUPS.forEach(g=>cat[g]=[]);
+  const add=(g,name,muscle,custom)=>{const k=name.toLowerCase();if(cat[g].some(x=>x.k===k))return;cat[g].push({k,name,muscle,custom});seen.add(k)};
+  for(const g in CATALOG)for(const s of CATALOG[g]){const[n,m]=s.split('|');add(g,n,m||muscleOfGroup(g))}
+  for(const c of db.customEx||[])add(c.group,c.name,c.muscle,true);
+  // Övningar från historiken som inte finns i listan sorteras in automatiskt
+  for(const s of db.sessions)for(const e of s.exercises){
+    const k=e.name.toLowerCase();usage[k]=(usage[k]||0)+1;
+    if(!seen.has(k)){const hit=IMPLIED.find(([r])=>r.test(k));add(hit?groupOfMuscle(hit[1]):'Övrigt',e.name,hit&&hit[1])}
+  }
+  for(const g of GROUPS)cat[g].sort((a,b)=>(usage[b.k]||0)-(usage[a.k]||0)); // mest använda först
+  return cat;
+}
+let pk=null;
+function openPicker(){
+  pk={group:draft.muscles[0]?groupOfMuscle(draft.muscles[0]):'Bröst',sel:new Map(),q:'',items:{}};
+  const el=document.createElement('div');el.className='sheet';el.id='picker';
+  el.innerHTML=`<div class="sheet-head"><div class="row"><b style="flex:1;font-size:17px">Välj övningar</b>
+    <button class="btn" data-p="cancel">Avbryt</button><button class="btn primary" data-p="done" id="pdone">Klar</button></div>
+    <input id="pq" class="mt" type="search" placeholder="Sök övning…" autocomplete="off"></div><div id="pbody" class="pbody"></div>`;
+  document.body.appendChild(el);document.body.style.overflow='hidden';
+  el.querySelector('#pq').oninput=e=>{pk.q=e.target.value;renderPicker()};
+  el.onclick=pickerClick;
+  renderPicker();
+}
+function closePicker(apply){
+  if(apply)for(const[k,it]of pk.sel){
+    if(draft.exercises.some(e=>e.name.toLowerCase()===k))continue;
+    const sg=suggestFor(it.name);
+    draft.exercises.push({name:it.name,sets:[{w:sg?sg.last:null,sets:null,reps:''}]});
+    if(it.muscle&&MUSCLES.includes(it.muscle))addU(draft.muscles,it.muscle);
+  }
+  document.getElementById('picker').remove();document.body.style.overflow='';
+  const n=pk.sel.size;pk=null;
+  if(apply&&n){render();toast(`${n} övning${n>1?'ar':''} tillagd${n>1?'a':''}`)}
+}
+function renderPicker(){
+  const cat=buildCatalog(),q=pk.q.trim().toLowerCase();
+  const inDraft=new Set(draft.exercises.map(e=>e.name.toLowerCase()));
+  let items;
+  if(q){const all=new Map();for(const g of GROUPS)for(const it of cat[g])if(it.k.includes(q)&&!all.has(it.k))all.set(it.k,it);items=[...all.values()]}
+  else items=cat[pk.group];
+  items.forEach(it=>pk.items[it.k]=it);
+  document.getElementById('pbody').innerHTML=
+    (q?'':`<div class="gtabs">${GROUPS.filter(g=>cat[g].length||g===pk.group).map(g=>`<span class="chip ${g===pk.group?'on':''}" data-g="${esc(g)}">${esc(g)}</span>`).join('')}</div>`)+
+    `<div class="plist">${items.map(it=>{
+      const on=pk.sel.has(it.k),done=inDraft.has(it.k),sg=suggestFor(it.name);
+      return `<div class="pitem ${on?'on':''} ${done?'done':''}" data-k="${esc(it.k)}"><span class="box">${on||done?'✓':''}</span>
+        <span class="nm">${esc(it.name)}${done?' <span class="muted small">(redan tillagd)</span>':''}<br><span class="muted small">${sg?`senast ${fmtNum(sg.last)} kg · rekord ${fmtNum(sg.best)} kg`:'ej kört än'}</span></span>
+        ${it.custom?`<button class="btn small danger" data-delc="${esc(it.k)}" aria-label="Ta bort övning">✕</button>`:''}</div>`}).join('')||'<p class="muted">Inga träffar.</p>'}
+    <button class="btn block mt" data-p="new">+ Ny övning ${q?`”${esc(pk.q.trim())}”`:`i ${esc(pk.group)}`}</button></div>`;
+  updDone();
+}
+function updDone(){document.getElementById('pdone').textContent=pk.sel.size?`Klar (${pk.sel.size})`:'Klar'}
+function pickerClick(e){
+  const t=e.target;
+  const delc=t.closest('[data-delc]');
+  if(delc){e.stopPropagation();const k=delc.dataset.delc;if(confirm('Ta bort övningen från listan? Loggade pass påverkas inte.')){db.customEx=(db.customEx||[]).filter(c=>c.name.toLowerCase()!==k);pk.sel.delete(k);save();renderPicker()}return}
+  const p=t.closest('[data-p]');
+  if(p){
+    if(p.dataset.p==='cancel')closePicker(false);
+    else if(p.dataset.p==='done')closePicker(true);
+    else{
+      const name=prompt(`Namn på ny övning (${pk.group}):`,pk.q.trim());if(!name||!name.trim())return;
+      const it={name:cap(name.trim()),group:pk.group,muscle:muscleOfGroup(pk.group)};
+      db.customEx=db.customEx||[];
+      if(!db.customEx.some(c=>c.name.toLowerCase()===it.name.toLowerCase()))db.customEx.push(it);
+      save();pk.sel.set(it.name.toLowerCase(),it);
+      pk.q='';document.getElementById('pq').value='';renderPicker();
+    }
+    return;
+  }
+  const g=t.closest('[data-g]');if(g){pk.group=g.dataset.g;renderPicker();document.querySelector('.plist').scrollTop=0;return}
+  const row=t.closest('.pitem');
+  if(row&&!row.classList.contains('done')){
+    const k=row.dataset.k;
+    if(pk.sel.has(k))pk.sel.delete(k);else pk.sel.set(k,pk.items[k]);
+    row.classList.toggle('on');row.querySelector('.box').textContent=pk.sel.has(k)?'✓':'';updDone();
+  }
+}
+
 /* ---------- Historik ---------- */
+let prMarks=new Set();
+function computePrMarks(){
+  const best={},set=new Set();
+  for(const s of [...db.sessions].reverse())for(const e of s.exercises){
+    const w=maxW(e),k=e.name.toLowerCase();if(!isFinite(w))continue;
+    if(k in best&&w>best[k])set.add(s.id+'|'+k);
+    if(!(k in best)||w>best[k])best[k]=w;
+  }
+  return set;
+}
 function sessionCard(s){
   const cardio=s.cardio.map(c=>`${c.type}${c.kcal?' '+c.kcal+' kcal':''}`).join(', ');
   return `<div class="card">
@@ -483,13 +683,14 @@ function sessionCard(s){
       <span><button class="btn small" data-act="edit" data-id="${s.id}">Redigera</button>
       <button class="btn small danger" data-act="del" data-id="${s.id}" aria-label="Ta bort">✕</button></span></div>
     <div style="margin:6px 0 4px">${musclesOf(s).map(m=>`<span class="tag">${m}</span>`).join('')}</div>
-    ${s.exercises.map(e=>`<div class="exline"><span>${esc(e.name)}${e.note?` <span class="muted small">(${esc(e.note)})</span>`:''}</span><span>${esc(fmtSets(e))||'–'}</span></div>`).join('')}
+    ${s.exercises.map(e=>`<div class="exline"><span>${esc(e.name)}${prMarks.has(s.id+'|'+e.name.toLowerCase())?' <span class="pr" title="Nytt rekord">🏆 PR</span>':''}${e.note?` <span class="muted small">(${esc(e.note)})</span>`:''}</span><span>${esc(fmtSets(e))||'–'}</span></div>`).join('')}
     ${cardio?`<div class="exline"><span>Kondition</span><span>${esc(cardio)}</span></div>`:''}
     ${s.notes?`<div class="small muted mt">📝 ${esc(s.notes)}</div>`:''}
   </div>`;
 }
 function renderHistory(){
   if(!db.sessions.length){view.innerHTML='<div class="card muted">Inga pass ännu. Logga ditt första under “Logga”.</div>';return}
+  prMarks=computePrMarks();
   const byWeek={};
   for(const s of db.sessions)(byWeek[mondayOf(s.date)]=byWeek[mondayOf(s.date)]||[]).push(s);
   const oldest=mondayOf(db.sessions[db.sessions.length-1].date);
@@ -503,6 +704,47 @@ function renderHistory(){
     mon=addDays(mon,-7);
   }
   view.innerHTML=html;
+}
+
+/* ---------- Förslag / mallar ---------- */
+function exHistory(name){ // tyngsta vikt per pass, äldst först
+  const k=name.toLowerCase(),out=[];
+  for(const s of [...db.sessions].reverse())for(const e of s.exercises)if(e.name.toLowerCase()===k){const w=maxW(e);if(isFinite(w))out.push({date:s.date,w})}
+  return out;
+}
+function suggestFor(name){
+  const h=exHistory(name);if(!h.length)return null;
+  const last=h[h.length-1],prev=h[h.length-2],best=Math.max(...h.map(x=>x.w));
+  // Samma vikt två pass i rad → dags att prova lite tyngre
+  const up=prev&&last.w>=prev.w&&last.w===best;
+  return{last:last.w,best,date:last.date,up,next:up?last.w+2.5:last.w};
+}
+function loadTemplate(t){
+  t.muscles.forEach(m=>addU(draft.muscles,m));
+  for(const it of t.items){
+    if(draft.exercises.some(e=>e.name.toLowerCase()===it.name.toLowerCase()))continue;
+    const sg=suggestFor(it.name);
+    draft.exercises.push({name:it.name,sets:[{w:sg?sg.last:null,sets:it.sets||null,reps:'',target:it.reps||''}]});
+  }
+}
+function lastTrained(t){
+  const main=t.muscles.slice(0,2);
+  const s=db.sessions.find(s=>s.date<=todayISO()&&main.some(m=>musclesOf(s).includes(m)));
+  return s?diffDays(s.date,todayISO()):null;
+}
+function renderSuggest(){
+  const rows=db.templates.map(t=>({t,since:lastTrained(t)}));
+  const due=rows.reduce((a,r)=>((r.since??999)>(a?(a.since??999):-1)?r:a),null);
+  view.innerHTML=`<div class="muted small" style="margin-bottom:12px">Färdiga pass per dagstyp. Vikterna bygger på din historik – ↑ betyder att du kört samma vikt två gånger i rad och kan prova 2,5 kg mer.</div>`+
+  rows.map(({t,since})=>`<div class="card ${due&&due.t===t?'due':''}">
+    <div class="sess-head"><b style="font-size:17px">${esc(t.name)}</b>${due&&due.t===t?'<span class="badge">Dags för</span>':''}</div>
+    <div class="muted small" style="margin:2px 0 8px">${since==null?'Aldrig kört':since===0?'Kört idag':`Senast för ${since} d sedan`} · ${t.muscles.map(esc).join(', ')}</div>
+    ${t.items.map(it=>{const sg=suggestFor(it.name);
+      return `<div class="exline"><span>${esc(it.name)}<br><span class="muted small">${[it.sets&&it.reps?`${it.sets}×${esc(it.reps)}`:it.sets?`${it.sets} set`:esc(it.reps||''),sg?`senast ${fmtNum(sg.last)} kg · rekord ${fmtNum(sg.best)} kg`:'ny övning'].filter(Boolean).join(' · ')}</span></span>
+      <span>${sg?(sg.up?`<b>↑ ${fmtNum(sg.next)} kg</b>`:`${fmtNum(sg.next)} kg`):'–'}</span></div>`}).join('')}
+    <div class="row mt"><button class="btn primary block" data-act="useTpl" data-id="${t.id}">Starta passet</button><button class="btn small danger" data-act="delTpl" data-id="${t.id}" aria-label="Ta bort mall">✕</button></div>
+  </div>`).join('')+
+  `<div class="muted small">Egna mallar skapar du under Logga → “Spara som mall”.</div>`;
 }
 
 /* ---------- Statistik ---------- */
@@ -618,16 +860,17 @@ function renderData(){
     <button class="btn primary block mt" data-act="importText">Importera</button>
   </div>
   <div class="card"><h2>Backup</h2>
-    <p class="small muted">All data sparas lokalt i den här webbläsaren. Exportera en backup då och då, eller för att flytta till en annan enhet.</p>
+    <p class="small muted">All data sparas lokalt i den här webbläsaren. Exportera en backup då och då. På iPhone väljer du <b>Spara i Filer → iCloud Drive</b>.<br>Senaste backup: <b>${db.lastBackup?fmtDate(db.lastBackup):"aldrig"}</b></p>
     <div class="row"><button class="btn block" data-act="exportJson">Exportera (JSON)</button><button class="btn block" data-act="importJson">Återställ från fil</button></div>
     <input type="file" id="jsonfile" accept="application/json,.json" hidden>
   </div>
+  <div class="card"><h2>Mallar</h2><p class="small muted">Har du tagit bort någon av standardmallarna kan du lägga tillbaka dem här.</p><button class="btn" data-act="resetTpl">Återställ standardmallar</button></div>
   <div class="card"><h2>Rensa</h2><p class="small muted">${db.sessions.length} pass sparade.</p><button class="btn danger" data-act="wipe">Radera all data</button></div>`;
   document.getElementById('jsonfile').onchange=async e=>{
     const f=e.target.files[0];if(!f)return;
     try{const d=JSON.parse(await f.text());if(!Array.isArray(d.sessions))throw 0;
       if(!confirm(`Ersätta nuvarande data med ${d.sessions.length} pass från filen?`))return;
-      db=d;sortSessions();save();toast('Återställt');go('history')}
+      db=d;migrate();sortSessions();save();toast('Återställt');go('history')}
     catch(err){toast('Ogiltig fil')}
   };
 }
@@ -639,8 +882,48 @@ document.addEventListener('pointerover',e=>{const t=e.target.closest&&e.target.c
 document.addEventListener('pointermove',e=>{if(!tip.hidden)placeTip(e)});
 document.addEventListener('scroll',()=>tip.hidden=true,{passive:true});
 
+/* ---------- Vilotimer ---------- */
+const tBtn=document.getElementById('timerBtn'),tBox=document.getElementById('timer');
+let tEnd=0,tTick=null,actx=null,tLast=+localStorage.getItem('traningslogg.rest')||90;
+const mmss=s=>`${Math.floor(s/60)}:${pad(s%60)}`;
+function beep(){
+  if(!actx)return;const t0=actx.currentTime;
+  [0,.35,.7].forEach(o=>{const os=actx.createOscillator(),g=actx.createGain();os.frequency.value=880;
+    g.gain.setValueAtTime(.0001,t0+o);g.gain.exponentialRampToValueAtTime(.5,t0+o+.02);g.gain.exponentialRampToValueAtTime(.0001,t0+o+.28);
+    os.connect(g).connect(actx.destination);os.start(t0+o);os.stop(t0+o+.3)});
+}
+function timerPanel(){
+  const left=tEnd?Math.max(0,Math.ceil((tEnd-Date.now())/1000)):null;
+  tBox.innerHTML=tEnd
+    ?`<div class="tbig">${mmss(left)}</div><div class="row"><button class="btn" data-t="add">+15 s</button><button class="btn danger" data-t="stop">Stopp</button><button class="btn" data-t="hide">Dölj</button></div>`
+    :`<div class="muted small" style="margin-bottom:8px">Vila mellan set</div><div class="row">${[60,90,120,180].map(s=>`<button class="btn ${s===tLast?'primary':''}" data-t="${s}">${mmss(s)}</button>`).join('')}</div><button class="btn small mt" data-t="hide">Stäng</button>`;
+}
+function tickTimer(){
+  const left=Math.ceil((tEnd-Date.now())/1000);
+  tBtn.textContent=left>0?mmss(left):'⏱';tBtn.classList.toggle('running',left>0);
+  if(!tBox.hidden)timerPanel();
+  if(left<=0){
+    clearInterval(tTick);tEnd=0;beep();navigator.vibrate&&navigator.vibrate([300,150,300]);
+    tBtn.textContent='Kör! 💪';tBtn.classList.add('done');
+    setTimeout(()=>{tBtn.textContent='⏱';tBtn.classList.remove('done')},4000);
+    if(!tBox.hidden)timerPanel();
+  }
+}
+tBtn.onclick=()=>{tBox.hidden=!tBox.hidden;if(!tBox.hidden)timerPanel()};
+tBox.onclick=e=>{
+  const v=e.target.dataset.t;if(!v)return;
+  if(v==='hide'){tBox.hidden=true;return}
+  if(v==='stop'){clearInterval(tTick);tEnd=0;tBtn.textContent='⏱';tBtn.classList.remove('running');timerPanel();return}
+  if(v==='add'){tEnd+=15000;tickTimer();return}
+  // Ljud måste låsas upp av en knapptryckning på iPhone
+  try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();actx.resume()}catch(err){}
+  tLast=+v;localStorage.setItem('traningslogg.rest',v);
+  tEnd=Date.now()+tLast*1000;clearInterval(tTick);tTick=setInterval(tickTimer,250);tickTimer();
+  tBox.hidden=true;
+};
+
 if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js');
-go(['log','history','stats','data'].includes(location.hash.slice(1))?location.hash.slice(1):'log');
+go(['log','suggest','history','stats','data'].includes(location.hash.slice(1))?location.hash.slice(1):'log');
 </script>
 </body>
 </html>
