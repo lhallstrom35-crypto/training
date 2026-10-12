@@ -76,6 +76,17 @@ svg text{fill:var(--text-muted);font-size:11px;font-family:inherit}
 #tip{position:fixed;z-index:20;pointer-events:none;background:#2e2e2c;border:1px solid var(--border);color:var(--text-primary);border-radius:8px;padding:7px 10px;font-size:13px;white-space:pre-line;max-width:260px;box-shadow:0 4px 16px rgba(0,0,0,.4)}
 .toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--surface-2);border:1px solid var(--border);padding:10px 16px;border-radius:999px;z-index:30;font-size:14px}
 [hidden]{display:none!important}
+.seg{margin:22px 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-secondary)}
+.seg:first-child{margin-top:0}
+.vbar{display:grid;grid-template-columns:96px 1fr 120px;gap:8px;align-items:center;font-size:14px;margin-bottom:7px}
+.vbar .track{position:relative;height:14px;background:var(--surface-2);border-radius:4px;overflow:hidden}
+.vbar .zone{position:absolute;top:0;bottom:0;background:rgba(57,135,229,.18);border-left:1px dashed var(--text-muted);border-right:1px dashed var(--text-muted)}
+.vbar .fill{position:relative;height:100%;background:var(--series-1);border-radius:0 4px 4px 0}
+.vbar .r{color:var(--text-secondary);font-size:12px;text-align:right}
+.vbar .r b{color:var(--text-primary)}
+.way{padding:10px 0;border-top:1px solid var(--grid)}
+.way:first-of-type{border-top:0;padding-top:0}
+.ss{display:inline-block;font-size:11px;font-weight:700;background:var(--surface-2);color:var(--accent);border-radius:5px;padding:0 5px;margin-right:2px}
 .sheet{position:fixed;inset:0;z-index:35;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
 .sheet-head{padding:12px 16px;border-bottom:1px solid var(--border);max-width:720px;width:100%;margin:0 auto}
 .pbody{flex:1;display:flex;flex-direction:column;min-height:0;max-width:720px;width:100%;margin:0 auto}
@@ -334,7 +345,25 @@ const DEFAULT_TEMPLATES=[
     {name:'Axelpress',sets:3,reps:'8-10'},{name:'Side delt',sets:3,reps:'12-15'},{name:'Rear delt',sets:3,reps:'12-15'},
     {name:'Kelso shrug',sets:3,reps:'10-12'},{name:'Underarmscurl',sets:3,reps:'15'}]},
 ];
-function migrate(){if(!Array.isArray(db.templates))db.templates=JSON.parse(JSON.stringify(DEFAULT_TEMPLATES))}
+// Helkropp 3 dagar/vecka med supersets (A1+A2 osv. körs direkt efter varandra)
+DEFAULT_TEMPLATES.push(
+  {id:'fb-a',prog:'fb',name:'Helkropp A',muscles:['Bröst','Rygg','Ben','Core','Biceps','Triceps'],items:[
+    {ss:'A1',name:'Incline maskin',sets:4,reps:'6-10'},{ss:'A2',name:'Chest supported row',sets:4,reps:'8-12'},
+    {ss:'B1',name:'Bulgarian split squat',sets:3,reps:'8-10'},{ss:'B2',name:'Hängande leg raise',sets:3,reps:'10-15'},
+    {ss:'C1',name:'Sittande curl maskin',sets:3,reps:'10-12'},{ss:'C2',name:'Overhead tri',sets:3,reps:'10-12'}]},
+  {id:'fb-b',prog:'fb',name:'Helkropp B',muscles:['Bröst','Rygg','Ben','Axlar','Vader'],items:[
+    {ss:'A1',name:'Chest press',sets:4,reps:'8-12'},{ss:'A2',name:'Wide grip row',sets:4,reps:'8-12'},
+    {ss:'B1',name:'Utfall',sets:3,reps:'10-12'},{ss:'B2',name:'Vadpress',sets:3,reps:'12-15'},
+    {ss:'C1',name:'Side delt',sets:3,reps:'12-15'},{ss:'C2',name:'Rear delt',sets:3,reps:'12-15'}]},
+  {id:'fb-c',prog:'fb',name:'Helkropp C',muscles:['Bröst','Rygg','Ben','Mage','Biceps','Triceps'],items:[
+    {ss:'A1',name:'Bänkpress',sets:4,reps:'6-10'},{ss:'A2',name:'Rows maskin',sets:4,reps:'8-12'},
+    {ss:'B1',name:'Benpress',sets:3,reps:'10-12'},{ss:'B2',name:'Weighted ab',sets:3,reps:'12-15'},
+    {ss:'C1',name:'Hammer curl',sets:3,reps:'10-12'},{ss:'C2',name:'Triceps one arm',sets:3,reps:'10-12'}]}
+);
+function migrate(){
+  if(!Array.isArray(db.templates))db.templates=JSON.parse(JSON.stringify(DEFAULT_TEMPLATES));
+  if(!db.fbAdded){const ids=new Set(db.templates.map(t=>t.id));DEFAULT_TEMPLATES.filter(t=>t.prog&&!ids.has(t.id)).forEach(t=>db.templates.push(JSON.parse(JSON.stringify(t))));db.fbAdded=true}
+}
 if(!db||!Array.isArray(db.sessions)){db={sessions:[]};importText(document.getElementById('seed').textContent,'2026-10-05')}
 migrate();save();
 
@@ -721,10 +750,12 @@ function suggestFor(name){
 }
 function loadTemplate(t){
   t.muscles.forEach(m=>addU(draft.muscles,m));
+  if(!draft.tpl)draft.tpl=t.id;
   for(const it of t.items){
     if(draft.exercises.some(e=>e.name.toLowerCase()===it.name.toLowerCase()))continue;
-    const sg=suggestFor(it.name);
-    draft.exercises.push({name:it.name,sets:[{w:sg?sg.last:null,sets:it.sets||null,reps:'',target:it.reps||''}]});
+    const sg=suggestFor(it.name),ex={name:it.name,sets:[{w:sg?sg.last:null,sets:it.sets||null,reps:'',target:it.reps||''}]};
+    if(it.ss)ex.note='superset '+it.ss[0];
+    draft.exercises.push(ex);
   }
 }
 function lastTrained(t){
@@ -732,19 +763,92 @@ function lastTrained(t){
   const s=db.sessions.find(s=>s.date<=todayISO()&&main.some(m=>musclesOf(s).includes(m)));
   return s?diffDays(s.date,todayISO()):null;
 }
-function renderSuggest(){
-  const rows=db.templates.map(t=>({t,since:lastTrained(t)}));
-  const due=rows.reduce((a,r)=>((r.since??999)>(a?(a.since??999):-1)?r:a),null);
-  view.innerHTML=`<div class="muted small" style="margin-bottom:12px">Färdiga pass per dagstyp. Vikterna bygger på din historik – ↑ betyder att du kört samma vikt två gånger i rad och kan prova 2,5 kg mer.</div>`+
-  rows.map(({t,since})=>`<div class="card ${due&&due.t===t?'due':''}">
-    <div class="sess-head"><b style="font-size:17px">${esc(t.name)}</b>${due&&due.t===t?'<span class="badge">Dags för</span>':''}</div>
-    <div class="muted small" style="margin:2px 0 8px">${since==null?'Aldrig kört':since===0?'Kört idag':`Senast för ${since} d sedan`} · ${t.muscles.map(esc).join(', ')}</div>
+function tplCard(t,{badge='',sub=''}={}){
+  return `<div class="card ${badge?'due':''}">
+    <div class="sess-head"><b style="font-size:17px">${esc(t.name)}</b>${badge?`<span class="badge">${badge}</span>`:''}</div>
+    <div class="muted small" style="margin:2px 0 8px">${sub}</div>
     ${t.items.map(it=>{const sg=suggestFor(it.name);
-      return `<div class="exline"><span>${esc(it.name)}<br><span class="muted small">${[it.sets&&it.reps?`${it.sets}×${esc(it.reps)}`:it.sets?`${it.sets} set`:esc(it.reps||''),sg?`senast ${fmtNum(sg.last)} kg · rekord ${fmtNum(sg.best)} kg`:'ny övning'].filter(Boolean).join(' · ')}</span></span>
+      return `<div class="exline"><span>${it.ss?`<span class="ss">${esc(it.ss)}</span> `:''}${esc(it.name)}<br><span class="muted small">${[it.sets&&it.reps?`${it.sets}×${esc(it.reps)}`:it.sets?`${it.sets} set`:esc(it.reps||''),sg?`senast ${fmtNum(sg.last)} kg · rekord ${fmtNum(sg.best)} kg`:'ny övning'].filter(Boolean).join(' · ')}</span></span>
       <span>${sg?(sg.up?`<b>↑ ${fmtNum(sg.next)} kg</b>`:`${fmtNum(sg.next)} kg`):'–'}</span></div>`}).join('')}
     <div class="row mt"><button class="btn primary block" data-act="useTpl" data-id="${t.id}">Starta passet</button><button class="btn small danger" data-act="delTpl" data-id="${t.id}" aria-label="Ta bort mall">✕</button></div>
-  </div>`).join('')+
-  `<div class="muted small">Egna mallar skapar du under Logga → “Spara som mall”.</div>`;
+  </div>`;
+}
+
+// Set per muskelgrupp under en vecka. Saknas antal set räknas 3 set per övning,
+// och en ikryssad muskelgrupp utan övningar räknas som 6 set (uppskattning).
+const VOL_GROUPS=['Bröst','Rygg','Axlar','Biceps','Triceps','Ben','Vader','Mage & core','Underarmar'];
+function exMuscles(name){
+  const k=name.toLowerCase(),out=new Set();
+  for(const g in CATALOG)for(const s of CATALOG[g]){const[n,m]=s.split('|');if(n.toLowerCase()===k)out.add(m||muscleOfGroup(g))}
+  for(const c of db.customEx||[])if(c.name.toLowerCase()===k&&c.muscle)out.add(c.muscle);
+  for(const[r,m]of IMPLIED)if(r.test(k))out.add(m);
+  return[...out];
+}
+function exSetCount(e){
+  if(e.sets.some(x=>x.sets))return{n:e.sets.reduce((a,x)=>a+(x.sets||1),0),est:false};
+  if(e.sets.length>1)return{n:e.sets.length,est:false};
+  return{n:3,est:true};
+}
+function weeklySets(mon){
+  const vol={};VOL_GROUPS.forEach(g=>vol[g]={n:0,est:false});
+  const end=addDays(mon,6);
+  for(const s of db.sessions){
+    if(s.date<mon||s.date>end)continue;
+    const hit=new Set();
+    for(const e of s.exercises){
+      const c=exSetCount(e),gs=new Set(exMuscles(e.name).map(groupOfMuscle));
+      for(const g of gs)if(vol[g]){vol[g].n+=c.n;vol[g].est=vol[g].est||c.est;hit.add(g)}
+    }
+    for(const g of new Set(s.muscles.map(groupOfMuscle)))if(vol[g]&&!hit.has(g)){vol[g].n+=6;vol[g].est=true}
+  }
+  return vol;
+}
+function renderSuggest(){
+  const today=todayISO(),mon=mondayOf(today),vol=weeklySets(mon),prev=weeklySets(addDays(mon,-7));
+  const days=new Set(db.sessions.filter(s=>s.date>=mon&&s.date<=today).map(s=>s.date)).size;
+  const daysLeft=diffDays(today,addDays(mon,6))+1;
+  const MAXV=24,pct=v=>Math.min(100,v/MAXV*100);
+  const volRows=VOL_GROUPS.map(g=>{const v=vol[g],n=v.n;
+    const st=n>=20?'över 20':n>=10?'✓ i zonen':`${10-n} set kvar`;
+    return `<div class="vbar" data-tip="${esc(`${g}: ${v.est?'≈':''}${n} set denna vecka${v.est?' (delvis uppskattat)':''}\nFörra veckan: ${prev[g].est?'≈':''}${prev[g].n} set\nMål: 10–20 set`)}">
+      <span>${g}</span><div class="track"><div class="zone" style="left:${pct(10)}%;width:${pct(20)-pct(10)}%"></div><div class="fill" style="width:${pct(n)}%"></div></div>
+      <span class="r"><b>${v.est&&n?'≈':''}${n}</b> · ${st}</span></div>`}).join('');
+  const under=VOL_GROUPS.filter(g=>vol[g].n<10&&!['Vader','Underarmar'].includes(g));
+
+  const fb=db.templates.filter(t=>t.prog==='fb');
+  const lastFb=t=>{const s=db.sessions.find(s=>s.tpl===t.id);return s?s.date:''};
+  const nextFb=fb.length?[...fb].sort((a,b)=>lastFb(a).localeCompare(lastFb(b)))[0]:null;
+  const fbDone=new Set(db.sessions.filter(s=>s.date>=mon&&fb.some(t=>t.id===s.tpl)).map(s=>s.date)).size;
+
+  const rows=db.templates.filter(t=>!t.prog).map(t=>({t,since:lastTrained(t)}));
+  const due=rows.reduce((a,r)=>((r.since??999)>(a?(a.since??999):-1)?r:a),null);
+
+  view.innerHTML=`
+  <div class="seg"><b>Forskningsbaserat</b></div>
+  <div class="card">
+    <h2>Veckans volym</h2>
+    <div class="muted small" style="margin-bottom:10px">Set per muskelgrupp vecka ${isoWeek(mon)}. Målet för bäst resultat är <b>10–20 set per muskel och vecka</b> (ljus zon).</div>
+    ${volRows}
+    <div class="small mt">${under.length?`👉 <b>Under 10 set:</b> ${under.join(', ')}. ${daysLeft>1?`${daysLeft} dagar kvar av veckan.`:'Sista dagen i veckan.'}`:'💪 Alla stora muskelgrupper är i zonen den här veckan.'}</div>
+    <details class="mt"><summary>Hur räknas det?</summary><div class="small muted mt">Set du har loggat räknas som de är. Saknas antal set räknas en övning som 3 set, och en ikryssad muskelgrupp utan övningar som 6 set – då visas ≈. Logga antal set för exakta siffror. Övningar räknas till alla muskler de träffar (t.ex. dips = bröst + triceps).</div></details>
+  </div>
+
+  <div class="card">
+    <h2>Två vägar</h2>
+    <div class="way"><b>🏆 Maximal tillväxt</b><div class="small muted">10–20 set per muskel och vecka. Bäst resultat i jämförelsen gav <b>helkropp 3 dagar/vecka med supersets</b> – varje muskel tränas oftare utan att de sista seten blir sämre.</div></div>
+    <div class="way"><b>⚖️ Hållbart</b><div class="small muted">4–5 dagar/vecka på <b>60–70 % av max</b> – avsluta varje set med ungefär 3–4 reps kvar i tanken. Bra resultat utan att bo på gymmet.</div>
+      <div class="small mt">Den här veckan: <b>${days} av 4–5 dagar</b>${days>=4?' ✓':days+daysLeft-(db.sessions.some(s=>s.date===today)?1:0)>=4?` – ${4-days} pass kvar att hinna`:''}</div></div>
+    <div class="small muted mt">Bygger på sammanfattningen du klistrade in från en enskild studie. Ta det som en riktlinje, inte en exakt sanning.</div>
+  </div>
+
+  ${fb.length?`<div class="seg"><b>Helkropp 3 dagar/vecka med supersets</b></div>
+  <div class="muted small" style="margin-bottom:10px">Kör A, B och C med minst en vilodag emellan, t.ex. mån–ons–fre. Övningar med samma bokstav (A1 + A2) är ett superset: kör A1, direkt A2, vila ~90 s, upprepa. ${fbDone?`Denna vecka: <b>${fbDone} av 3</b> helkroppspass.`:''}</div>
+  ${fb.map(t=>{const l=lastFb(t);return tplCard(t,{badge:t===nextFb?'Nästa':'',sub:(l?`Senast ${fmtDate(l,false)}`:'Inte kört än')+' · hela kroppen'})}).join('')}`:''}
+
+  <div class="seg"><b>Dina dagstyper</b></div>
+  <div class="muted small" style="margin-bottom:12px">Vikterna bygger på din historik – ↑ betyder att du kört samma vikt två gånger i rad och kan prova 2,5 kg mer.</div>
+  ${rows.map(({t,since})=>tplCard(t,{badge:due&&due.t===t?'Dags för':'',sub:`${since==null?'Aldrig kört':since===0?'Kört idag':`Senast för ${since} d sedan`} · ${t.muscles.map(esc).join(', ')}`})).join('')}
+  <div class="muted small">Egna mallar skapar du under Logga → “Spara som mall”.</div>`;
 }
 
 /* ---------- Statistik ---------- */
