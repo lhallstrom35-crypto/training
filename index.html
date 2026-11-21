@@ -401,16 +401,16 @@ const DEFAULT_TEMPLATES=[
 // Helkropp 3 dagar/vecka med supersets (A1+A2 osv. körs direkt efter varandra)
 DEFAULT_TEMPLATES.push(
   {id:'fb-a',prog:'fb',name:'Helkropp A',muscles:['Bröst','Rygg','Ben','Core','Biceps','Triceps'],items:[
-    {ss:'A1',name:'Incline maskin',alt:['Incline hantel','Incline smith'],sets:4,reps:'6-10'},{ss:'A2',name:'Chest supported row',alt:['Latsdrag'],sets:4,reps:'8-12'},
+    {ss:'A1',name:'Incline maskin',alt:['Incline hantel','Incline smith'],sets:4,reps:'6-10'},{ss:'A2',name:'Chest supported row',alt:['Rev fly'],sets:4,reps:'8-12'},
     {ss:'B1',name:'Bulgarian split squat',alt:['Rumänsk marklyft'],sets:3,reps:'8-10'},{ss:'B2',name:'Hängande leg raise',alt:['Leg raise'],sets:3,reps:'10-15'},
     {ss:'C1',name:'Sittande curl maskin',alt:['Preacher curl'],sets:3,reps:'10-12'},{ss:'C2',name:'Overhead tri',alt:['Skull crushers'],sets:3,reps:'10-12'}]},
   {id:'fb-b',prog:'fb',name:'Helkropp B',muscles:['Bröst','Rygg','Ben','Biceps','Triceps','Axlar','Vader'],items:[
-    {ss:'A1',name:'Chest press',alt:['Dips'],sets:4,reps:'8-12'},{ss:'A2',name:'Wide grip row',alt:['Pull-ups'],sets:4,reps:'8-12'},
+    {ss:'A1',name:'Chest press',alt:['Dips'],sets:4,reps:'8-12'},{ss:'A2',name:'Wide grip row',alt:['Kelso shrug'],sets:4,reps:'8-12'},
     {ss:'B1',name:'Utfall',alt:['Lårcurl'],sets:3,reps:'10-12'},{ss:'B2',name:'Vadpress',alt:['Stående vadpress'],sets:3,reps:'12-15'},
     {ss:'C1',name:'Incline bi',alt:['Cable curl'],sets:3,reps:'10-12'},{ss:'C2',name:'Triceps pushdown',sets:3,reps:'10-12'},
     {ss:'D1',name:'Side delt',alt:['Axelpress'],sets:3,reps:'12-15'},{ss:'D2',name:'Rear delt',alt:['Face pulls'],sets:3,reps:'12-15'}]},
   {id:'fb-c',prog:'fb',name:'Helkropp C',muscles:['Bröst','Rygg','Ben','Mage','Biceps','Triceps'],items:[
-    {ss:'A1',name:'Bänkpress',alt:['Pec deck','Cable flyes'],sets:4,reps:'6-10'},{ss:'A2',name:'Rows maskin',alt:['Hantelrodd'],sets:4,reps:'8-12'},
+    {ss:'A1',name:'Bänkpress',alt:['Pec deck','Cable flyes'],sets:4,reps:'6-10'},{ss:'A2',name:'Rows maskin',alt:['Wide grip row'],sets:4,reps:'8-12'},
     {ss:'B1',name:'Benpress',alt:['Knäböj'],sets:3,reps:'10-12'},{ss:'B2',name:'Weighted ab',alt:['Cable crunch'],sets:3,reps:'12-15'},
     {ss:'C1',name:'Hammer curl',alt:['Barbell curl'],sets:3,reps:'10-12'},{ss:'C2',name:'Triceps one arm',sets:3,reps:'10-12'}]}
 );
@@ -418,7 +418,7 @@ function migrate(){
   if(!Array.isArray(db.templates))db.templates=JSON.parse(JSON.stringify(DEFAULT_TEMPLATES));
   if(!db.fbAdded){const ids=new Set(db.templates.map(t=>t.id));DEFAULT_TEMPLATES.filter(t=>t.prog&&!ids.has(t.id)).forEach(t=>db.templates.push(JSON.parse(JSON.stringify(t))));db.fbAdded=true}
   if((db.fbVer||1)<2){db.templates=db.templates.map(t=>{const d=DEFAULT_TEMPLATES.find(x=>x.prog&&x.id===t.id);return d?JSON.parse(JSON.stringify(d)):t});db.fbVer=2}
-  if(db.fbVer<3){db.templates.forEach(t=>{const d=DEFAULT_TEMPLATES.find(x=>x.prog&&x.id===t.id);if(d)t.items.forEach(it=>{const di=d.items.find(x=>x.ss===it.ss);if(di&&di.alt&&!it.alt)it.alt=di.alt})});db.fbVer=3}
+  if(db.fbVer<4){db.templates.forEach(t=>{const d=DEFAULT_TEMPLATES.find(x=>x.prog&&x.id===t.id);if(d)t.items.forEach(it=>{const di=d.items.find(x=>x.ss===it.ss);if(di&&di.alt)it.alt=di.alt})});db.fbVer=4}
 }
 if(!db||!Array.isArray(db.sessions)){db={sessions:[]};importText(document.getElementById('seed').textContent,'2026-10-05')}
 migrate();save();
