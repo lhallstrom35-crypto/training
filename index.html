@@ -401,23 +401,24 @@ const DEFAULT_TEMPLATES=[
 // Helkropp 3 dagar/vecka med supersets (A1+A2 osv. körs direkt efter varandra)
 DEFAULT_TEMPLATES.push(
   {id:'fb-a',prog:'fb',name:'Helkropp A',muscles:['Bröst','Rygg','Ben','Core','Biceps','Triceps'],items:[
-    {ss:'A1',name:'Incline maskin',sets:4,reps:'6-10'},{ss:'A2',name:'Chest supported row',sets:4,reps:'8-12'},
-    {ss:'B1',name:'Bulgarian split squat',sets:3,reps:'8-10'},{ss:'B2',name:'Hängande leg raise',sets:3,reps:'10-15'},
-    {ss:'C1',name:'Sittande curl maskin',sets:3,reps:'10-12'},{ss:'C2',name:'Overhead tri',sets:3,reps:'10-12'}]},
+    {ss:'A1',name:'Incline maskin',alt:['Incline hantel','Incline smith'],sets:4,reps:'6-10'},{ss:'A2',name:'Chest supported row',alt:['Latsdrag'],sets:4,reps:'8-12'},
+    {ss:'B1',name:'Bulgarian split squat',alt:['Rumänsk marklyft'],sets:3,reps:'8-10'},{ss:'B2',name:'Hängande leg raise',alt:['Leg raise'],sets:3,reps:'10-15'},
+    {ss:'C1',name:'Sittande curl maskin',alt:['Preacher curl'],sets:3,reps:'10-12'},{ss:'C2',name:'Overhead tri',alt:['Skull crushers'],sets:3,reps:'10-12'}]},
   {id:'fb-b',prog:'fb',name:'Helkropp B',muscles:['Bröst','Rygg','Ben','Biceps','Triceps','Axlar','Vader'],items:[
-    {ss:'A1',name:'Chest press',sets:4,reps:'8-12'},{ss:'A2',name:'Wide grip row',sets:4,reps:'8-12'},
-    {ss:'B1',name:'Utfall',sets:3,reps:'10-12'},{ss:'B2',name:'Vadpress',sets:3,reps:'12-15'},
-    {ss:'C1',name:'Incline bi',sets:3,reps:'10-12'},{ss:'C2',name:'Triceps pushdown',sets:3,reps:'10-12'},
-    {ss:'D1',name:'Side delt',sets:3,reps:'12-15'},{ss:'D2',name:'Rear delt',sets:3,reps:'12-15'}]},
+    {ss:'A1',name:'Chest press',alt:['Dips'],sets:4,reps:'8-12'},{ss:'A2',name:'Wide grip row',alt:['Pull-ups'],sets:4,reps:'8-12'},
+    {ss:'B1',name:'Utfall',alt:['Lårcurl'],sets:3,reps:'10-12'},{ss:'B2',name:'Vadpress',alt:['Stående vadpress'],sets:3,reps:'12-15'},
+    {ss:'C1',name:'Incline bi',alt:['Cable curl'],sets:3,reps:'10-12'},{ss:'C2',name:'Triceps pushdown',sets:3,reps:'10-12'},
+    {ss:'D1',name:'Side delt',alt:['Axelpress'],sets:3,reps:'12-15'},{ss:'D2',name:'Rear delt',alt:['Face pulls'],sets:3,reps:'12-15'}]},
   {id:'fb-c',prog:'fb',name:'Helkropp C',muscles:['Bröst','Rygg','Ben','Mage','Biceps','Triceps'],items:[
-    {ss:'A1',name:'Bänkpress',sets:4,reps:'6-10'},{ss:'A2',name:'Rows maskin',sets:4,reps:'8-12'},
-    {ss:'B1',name:'Benpress',sets:3,reps:'10-12'},{ss:'B2',name:'Weighted ab',sets:3,reps:'12-15'},
-    {ss:'C1',name:'Hammer curl',sets:3,reps:'10-12'},{ss:'C2',name:'Triceps one arm',sets:3,reps:'10-12'}]}
+    {ss:'A1',name:'Bänkpress',alt:['Pec deck','Cable flyes'],sets:4,reps:'6-10'},{ss:'A2',name:'Rows maskin',alt:['Hantelrodd'],sets:4,reps:'8-12'},
+    {ss:'B1',name:'Benpress',alt:['Knäböj'],sets:3,reps:'10-12'},{ss:'B2',name:'Weighted ab',alt:['Cable crunch'],sets:3,reps:'12-15'},
+    {ss:'C1',name:'Hammer curl',alt:['Barbell curl'],sets:3,reps:'10-12'},{ss:'C2',name:'Triceps one arm',sets:3,reps:'10-12'}]}
 );
 function migrate(){
   if(!Array.isArray(db.templates))db.templates=JSON.parse(JSON.stringify(DEFAULT_TEMPLATES));
   if(!db.fbAdded){const ids=new Set(db.templates.map(t=>t.id));DEFAULT_TEMPLATES.filter(t=>t.prog&&!ids.has(t.id)).forEach(t=>db.templates.push(JSON.parse(JSON.stringify(t))));db.fbAdded=true}
   if((db.fbVer||1)<2){db.templates=db.templates.map(t=>{const d=DEFAULT_TEMPLATES.find(x=>x.prog&&x.id===t.id);return d?JSON.parse(JSON.stringify(d)):t});db.fbVer=2}
+  if(db.fbVer<3){db.templates.forEach(t=>{const d=DEFAULT_TEMPLATES.find(x=>x.prog&&x.id===t.id);if(d)t.items.forEach(it=>{const di=d.items.find(x=>x.ss===it.ss);if(di&&di.alt&&!it.alt)it.alt=di.alt})});db.fbVer=3}
 }
 if(!db||!Array.isArray(db.sessions)){db={sessions:[]};importText(document.getElementById('seed').textContent,'2026-10-05')}
 migrate();save();
@@ -803,10 +804,17 @@ function suggestFor(name){
   const up=prev&&last.w>=prev.w&&last.w===best;
   return{last:last.w,best,date:last.date,up,next:up?last.w+2.5:last.w};
 }
+// Plats med alternativ (alt): välj den variant som gjordes längst sedan, så passen roterar
+function lastDone(name){const k=name.toLowerCase(),s=db.sessions.find(s=>s.exercises.some(e=>e.name.toLowerCase()===k));return s?s.date:''}
+function rot(it){
+  if(!it.alt||!it.alt.length)return it;
+  const name=[it.name,...it.alt].map(n=>({n,d:lastDone(n)})).sort((a,b)=>a.d.localeCompare(b.d))[0].n;
+  return{...it,name};
+}
 function loadTemplate(t){
   t.muscles.forEach(m=>addU(draft.muscles,m));
   if(!draft.tpl)draft.tpl=t.id;
-  for(const it of t.items){
+  for(const it of t.items.map(rot)){
     if(draft.exercises.some(e=>e.name.toLowerCase()===it.name.toLowerCase()))continue;
     const sg=suggestFor(it.name),ex={name:it.name,sets:[{w:sg?sg.last:null,sets:it.sets||null,reps:'',target:it.reps||''}]};
     if(it.ss)ex.note='superset '+it.ss[0];
@@ -822,7 +830,7 @@ function tplCard(t,{badge='',sub=''}={}){
   return `<div class="card ${badge?'due':''}">
     <div class="sess-head"><b>${esc(t.name)}</b>${badge?`<span class="badge">${badge}</span>`:''}</div>
     <div class="muted small" style="margin:2px 0 8px">${sub}</div>
-    ${t.items.map(it=>{const sg=suggestFor(it.name);
+    ${t.items.map(rot).map(it=>{const sg=suggestFor(it.name);
       return `<div class="exline"><span>${it.ss?`<span class="ss">${esc(it.ss)}</span> `:''}${esc(it.name)}<br><span class="muted small">${[it.sets&&it.reps?`${it.sets}×${esc(it.reps)}`:it.sets?`${it.sets} set`:esc(it.reps||''),sg?`senast ${fmtNum(sg.last)} kg · rekord ${fmtNum(sg.best)} kg`:'ny övning'].filter(Boolean).join(' · ')}</span></span>
       <span>${sg?(sg.up?`<b class="up">↑ ${fmtNum(sg.next)} kg</b>`:`${fmtNum(sg.next)} kg`):'–'}</span></div>`}).join('')}
     <div class="row mt"><button class="btn primary block" data-act="useTpl" data-id="${t.id}">Starta passet</button><button class="btn small danger" data-act="delTpl" data-id="${t.id}" aria-label="Ta bort mall">✕</button></div>
@@ -911,7 +919,7 @@ function renderHome(){
     </div>
     ${nx?`<div class="card hero"><div class="sess-head"><b>${esc(nx.t.name)}</b><span class="badge">Förslag</span></div>
       <div class="muted small" style="margin:2px 0 8px">${esc(nx.why)}</div>
-      <div class="small" style="margin-bottom:10px">${nx.t.items.map(it=>{const sg=suggestFor(it.name);return esc(it.name)+(sg?` <span class="muted">${sg.up?'↑ ':''}${fmtNum(sg.next)} kg</span>`:'')}).join(' · ')}</div>
+      <div class="small" style="margin-bottom:10px">${nx.t.items.map(rot).map(it=>{const sg=suggestFor(it.name);return esc(it.name)+(sg?` <span class="muted">${sg.up?'↑ ':''}${fmtNum(sg.next)} kg</span>`:'')}).join(' · ')}</div>
       <button class="btn primary block" data-act="useTpl" data-id="${nx.t.id}">Starta passet</button></div>`:''}
     <div class="card"><h2>Veckans volym</h2>
       <div class="muted small" style="margin-bottom:10px">Set per muskelgrupp. Mål 10–20 set (grön zon).</div>
