@@ -490,8 +490,9 @@ function celebrate(lines){
 function backupBanner(){
   if(!db.sessions.length)return'';
   const d=db.lastBackup?diffDays(db.lastBackup,todayISO()):null;
-  if(d!==null&&d<7)return'';
-  return `<div class="banner"><span>💾 ${d===null?'Du har inte sparat någon backup än.':`${d} dagar sedan senaste backup.`}</span><button class="btn small primary" data-act="exportJson">Spara backup</button></div>`;
+  const sun=fromISO(todayISO()).getDay()===0; // söndag = backupdag
+  if(d!==null&&d<7&&!(sun&&d>0))return'';
+  return `<div class="banner"><span>💾 ${d===null?'Du har inte sparat någon backup än.':sun?'Det är söndag – dags för veckans backup.':`${d} dagar sedan senaste backup.`}</span><button class="btn small primary" data-act="exportJson">Spara backup</button></div>`;
 }
 function refreshDatalist(){document.getElementById('exlist').innerHTML=exerciseNames().map(x=>`<option value="${esc(x.name)}">`).join('')}
 
