@@ -442,15 +442,19 @@ function importText(text,endISO){
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtNum=n=>String(n).replace('.',',');
 const fmtDate=(s,withDow=true)=>{const d=fromISO(s);return (withDow?cap(DOW[d.getDay()])+' ':'')+d.getDate()+' '+MONTHS[d.getMonth()]};
-function fmtSet(x){
-  let s=x.w!=null?fmtNum(x.w)+' kg':'';
+// Tidsövningar (planka m.fl.) loggas i sekunder i w-fältet; längst tid = rekord
+function unitOf(name){const k=(name||'').toLowerCase();return /plank/.test(k)||db.sessions.some(s=>s.exercises.some(e=>e.unit==='s'&&e.name.toLowerCase()===k))?'s':'kg'}
+const exU=e=>e.unit||unitOf(e.name);
+const U=name=>' '+unitOf(name);
+function fmtSet(x,u='kg'){
+  let s=x.w!=null?fmtNum(x.w)+' '+u:'';
   if(x.sets&&x.reps)s+=` ${x.sets}×${x.reps}`;
   else if(x.sets)s+=` · ${x.sets} set`;
   else if(x.reps)s+=` × ${x.reps}`;
   if(x.note)s+=` (${x.note})`;
   return s.trim();
 }
-const fmtSets=e=>e.sets.map(fmtSet).filter(Boolean).join(', ');
+const fmtSets=e=>e.sets.map(x=>fmtSet(x,exU(e))).filter(Boolean).join(', ');
 const maxW=e=>Math.max(-Infinity,...e.sets.map(x=>x.w).filter(w=>w!=null));
 function musclesOf(s){
   const set=new Set(s.muscles);
@@ -473,7 +477,7 @@ function findRecords(s){ // jämför mot alla andra pass
     const w=maxW(e),k=e.name.toLowerCase();if(!isFinite(w))continue;
     let best=-Infinity;
     for(const o of db.sessions)if(o.id!==s.id)for(const oe of o.exercises)if(oe.name.toLowerCase()===k)best=Math.max(best,maxW(oe));
-    if(isFinite(best)&&w>best)out.push(`${e.name}: ${fmtNum(w)} kg (förra rekordet ${fmtNum(best)} kg)`);
+    if(isFinite(best)&&w>best)out.push(`${e.name}: ${fmtNum(w)}${U(e.name)} (förra rekordet ${fmtNum(best)}${U(e.name)})`);
   }
   return out;
 }
@@ -515,17 +519,18 @@ function hintFor(name,date){
   }
   const parts=[];
   if(last)parts.push(`Senast ${fmtDate(last.s.date,false)}: ${fmtSets(last.e)}`);
-  if(pr)parts.push(`Rekord: ${fmtNum(pr.w)} kg`);
+  if(pr)parts.push(`Rekord: ${fmtNum(pr.w)}${U(name)}`);
   return esc(parts.join(' · '));
 }
 function exHTML(e,i){
+  const u=exU(e);
   return `<div class="ex">
     <div class="row"><input data-f="ex.${i}.name" list="exlist" value="${esc(e.name)}" placeholder="Övning, t.ex. Incline maskin" autocomplete="off">
     <button class="btn small" data-act="delEx" data-i="${i}" aria-label="Ta bort övning">✕</button></div>
     <div class="hint" id="hint${i}">${hintFor(e.name,draft.date)}</div>
-    ${e.sets.length?'<div class="setshead"><span>Vikt (kg)</span><span>Set</span><span>Reps</span><span></span></div>':''}
+    ${e.sets.length?`<div class="setshead"><span><button class="btn small" data-act="unit" data-i="${i}" aria-label="Byt mellan kg och sekunder">${u==='s'?'Tid (s)':'Vikt (kg)'} ⇄</button></span>`+'<span>Set</span><span>Reps</span><span></span></div>':''}
     ${e.sets.map((x,j)=>`<div class="setrow">
-      <input data-f="ex.${i}.sets.${j}.w" value="${x.w!=null?fmtNum(x.w):''}" inputmode="decimal" placeholder="kg">
+      <input data-f="ex.${i}.sets.${j}.w" value="${x.w!=null?fmtNum(x.w):''}" inputmode="decimal" placeholder="${u==='s'?'sek':'kg'}">
       <input data-f="ex.${i}.sets.${j}.sets" value="${x.sets??''}" inputmode="numeric" placeholder="–">
       <input data-f="ex.${i}.sets.${j}.reps" value="${esc(x.reps??'')}" placeholder="${esc(x.target||'–')}">
       <button class="btn small" data-act="delSet" data-i="${i}" data-j="${j}" aria-label="Ta bort">✕</button></div>`).join('')}
@@ -551,7 +556,7 @@ function renderLog(){
     ${d.exercises.map(exHTML).join('')}
     <button class="btn small" data-act="addEx">+ Lägg till övningar</button>
     <h3>Kondition</h3>
-    ${d.cardio.map((c,i)=>`<div class="row mb"><input data-f="cardio.${i}.type" value="${esc(c.type)}" placeholder="Typ, t.ex. Löpband"><input data-f="cardio.${i}.kcal" value="${c.kcal??''}" inputmode="numeric" placeholder="kcal" style="width:90px"><button class="btn small" data-act="delCardio" data-i="${i}" aria-label="Ta bort">✕</button></div>`).join('')}
+    ${d.cardio.map((c,i)=>`<div class="row mb"><input data-f="cardio.${i}.type" value="${esc(c.type)}" placeholder="Typ, t.ex. Löpband"><input data-f="cardio.${i}.kcal" value="${c.kcal??''}" inputmode="numeric" placeholder="kcal" style="width:90px"><input data-f="cardio.${i}.min" value="${c.min??''}" inputmode="numeric" placeholder="min" style="width:80px"><button class="btn small" data-act="delCardio" data-i="${i}" aria-label="Ta bort">✕</button></div>`).join('')}
     <button class="btn small" data-act="addCardio">+ Kondition</button>
     <h3>Anteckningar</h3>
     <textarea data-f="notes" placeholder="Hur kändes det?">${esc(d.notes)}</textarea>
@@ -565,7 +570,7 @@ function setPath(path,val){
   for(let i=0;i<ks.length-1;i++)o=o[ks[i]==='ex'?'exercises':ks[i]];
   const last=ks[ks.length-1];
   if(last==='w'){val=parseFloat(val.replace(',','.'));if(isNaN(val))val=null}
-  else if(last==='sets'||last==='kcal'){val=parseInt(val);if(isNaN(val))val=null}
+  else if(last==='sets'||last==='kcal'||last==='min'){val=parseInt(val);if(isNaN(val))val=null}
   o[last]=val;
 }
 view.addEventListener('input',e=>{
@@ -582,6 +587,7 @@ view.addEventListener('click',e=>{
   const i=+b.dataset.i,j=+b.dataset.j;
   const acts={
     addEx(){openPicker()},
+    unit(){const e=draft.exercises[i];e.unit=exU(e)==='s'?'kg':'s';render()},
     delEx(){draft.exercises.splice(i,1);render()},
     addSet(){const s=draft.exercises[i].sets;const p=s[s.length-1];s.push(p?{...p,note:undefined}:{w:null});render()},
     delSet(){draft.exercises[i].sets.splice(j,1);render()},
@@ -597,8 +603,8 @@ view.addEventListener('click',e=>{
     },
     save(){
       const s={...draft,id:draft.id||uid()};
-      s.exercises=s.exercises.map(e=>({...e,name:cap(e.name.trim()),sets:e.sets.filter(x=>x.w!=null||x.sets||x.reps).map(({target,...x})=>x)})).filter(e=>e.name);
-      s.cardio=s.cardio.filter(c=>c.type||c.kcal);
+      s.exercises=s.exercises.map(e=>({...e,name:cap(e.name.trim()),unit:exU(e)==='s'?'s':undefined,sets:e.sets.filter(x=>x.w!=null||x.sets||x.reps).map(({target,...x})=>x)})).filter(e=>e.name);
+      s.cardio=s.cardio.filter(c=>c.type||c.kcal||c.min);
       if(!s.date){toast('Välj datum');return}
       if(!s.muscles.length&&!s.exercises.length&&!s.cardio.length&&!s.notes){toast('Passet är tomt');return}
       const prs=findRecords(s);
@@ -717,7 +723,7 @@ function renderPicker(){
     `<div class="plist">${items.map(it=>{
       const on=pk.sel.has(it.k),done=inDraft.has(it.k),sg=suggestFor(it.name);
       return `<div class="pitem ${on?'on':''} ${done?'done':''}" data-k="${esc(it.k)}"><span class="box">${on||done?'✓':''}</span>
-        <span class="nm">${esc(it.name)}${done?' <span class="muted small">(redan tillagd)</span>':''}<br><span class="muted small">${sg?`senast ${fmtNum(sg.last)} kg · rekord ${fmtNum(sg.best)} kg`:'ej kört än'}</span></span>
+        <span class="nm">${esc(it.name)}${done?' <span class="muted small">(redan tillagd)</span>':''}<br><span class="muted small">${sg?`senast ${fmtNum(sg.last)}${U(it.name)} · rekord ${fmtNum(sg.best)}${U(it.name)}`:'ej kört än'}</span></span>
         ${it.custom?`<button class="btn small danger" data-delc="${esc(it.k)}" aria-label="Ta bort övning">✕</button>`:''}</div>`}).join('')||'<p class="muted">Inga träffar.</p>'}
     <button class="btn block mt" data-p="new">+ Ny övning ${q?`”${esc(pk.q.trim())}”`:`i ${esc(pk.group)}`}</button></div>`;
   updDone();
@@ -762,7 +768,7 @@ function computePrMarks(){
   return set;
 }
 function sessionCard(s){
-  const cardio=s.cardio.map(c=>`${c.type}${c.kcal?' '+c.kcal+' kcal':''}`).join(', ');
+  const cardio=s.cardio.map(c=>`${c.type}${c.min?' '+c.min+' min':''}${c.kcal?' '+c.kcal+' kcal':''}`).join(', ');
   return `<div class="card">
     <div class="sess-head"><b>${fmtDate(s.date)}</b>
       <span><button class="btn small" data-act="edit" data-id="${s.id}">Redigera</button>
@@ -802,7 +808,7 @@ function suggestFor(name){
   const last=h[h.length-1],prev=h[h.length-2],best=Math.max(...h.map(x=>x.w));
   // Samma vikt två pass i rad → dags att prova lite tyngre
   const up=prev&&last.w>=prev.w&&last.w===best;
-  return{last:last.w,best,date:last.date,up,next:up?last.w+2.5:last.w};
+  return{last:last.w,best,date:last.date,up,next:up?last.w+(unitOf(name)==='s'?5:2.5):last.w};
 }
 // Plats med alternativ (alt): välj den variant som gjordes längst sedan, så passen roterar
 function lastDone(name){const k=name.toLowerCase(),s=db.sessions.find(s=>s.exercises.some(e=>e.name.toLowerCase()===k));return s?s.date:''}
@@ -831,8 +837,8 @@ function tplCard(t,{badge='',sub=''}={}){
     <div class="sess-head"><b>${esc(t.name)}</b>${badge?`<span class="badge">${badge}</span>`:''}</div>
     <div class="muted small" style="margin:2px 0 8px">${sub}</div>
     ${t.items.map(rot).map(it=>{const sg=suggestFor(it.name);
-      return `<div class="exline"><span>${it.ss?`<span class="ss">${esc(it.ss)}</span> `:''}${esc(it.name)}<br><span class="muted small">${[it.sets&&it.reps?`${it.sets}×${esc(it.reps)}`:it.sets?`${it.sets} set`:esc(it.reps||''),sg?`senast ${fmtNum(sg.last)} kg · rekord ${fmtNum(sg.best)} kg`:'ny övning'].filter(Boolean).join(' · ')}</span></span>
-      <span>${sg?(sg.up?`<b class="up">↑ ${fmtNum(sg.next)} kg</b>`:`${fmtNum(sg.next)} kg`):'–'}</span></div>`}).join('')}
+      return `<div class="exline"><span>${it.ss?`<span class="ss">${esc(it.ss)}</span> `:''}${esc(it.name)}<br><span class="muted small">${[it.sets&&it.reps?`${it.sets}×${esc(it.reps)}`:it.sets?`${it.sets} set`:esc(it.reps||''),sg?`senast ${fmtNum(sg.last)}${U(it.name)} · rekord ${fmtNum(sg.best)}${U(it.name)}`:'ny övning'].filter(Boolean).join(' · ')}</span></span>
+      <span>${sg?(sg.up?`<b class="up">↑ ${fmtNum(sg.next)}${U(it.name)}</b>`:`${fmtNum(sg.next)}${U(it.name)}`):'–'}</span></div>`}).join('')}
     <div class="row mt"><button class="btn primary block" data-act="useTpl" data-id="${t.id}">Starta passet</button>${t.id==='extra'?'':`<button class="btn small danger" data-act="delTpl" data-id="${t.id}" aria-label="Ta bort mall">✕</button>`}</div>
   </div>`;
 }
@@ -934,7 +940,7 @@ function renderHome(){
     </div>
     ${nx?`<div class="card hero"><div class="sess-head"><b>${esc(nx.t.name)}</b><span class="badge">Förslag</span></div>
       <div class="muted small" style="margin:2px 0 8px">${esc(nx.why)}</div>
-      <div class="small" style="margin-bottom:10px">${nx.t.items.map(rot).map(it=>{const sg=suggestFor(it.name);return esc(it.name)+(sg?` <span class="muted">${sg.up?'↑ ':''}${fmtNum(sg.next)} kg</span>`:'')}).join(' · ')}</div>
+      <div class="small" style="margin-bottom:10px">${nx.t.items.map(rot).map(it=>{const sg=suggestFor(it.name);return esc(it.name)+(sg?` <span class="muted">${sg.up?'↑ ':''}${fmtNum(sg.next)}${U(it.name)}</span>`:'')}).join(' · ')}</div>
       <button class="btn primary block" data-act="useTpl" data-id="${nx.t.id}">Starta passet</button></div>`:''}
     <div class="card"><h2>Veckans volym</h2>
       <div class="muted small" style="margin-bottom:10px">Set per muskelgrupp. Mål 10–20 set (grön zon).</div>
@@ -942,7 +948,7 @@ function renderHome(){
       <div class="small mt">${under.length?`👉 <b>Under 10 set:</b> ${under.join(', ')}`:'💪 Alla stora muskelgrupper är i zonen.'}</div></div>
     <div class="card"><h2>Pass per vecka</h2>${barChart(weeks)}</div>
     <div class="card"><h2>Senaste rekord</h2>
-      ${prs.length?prs.map(p=>`<div class="exline"><span>🏆 ${esc(p.name)} <span class="muted small">${fmtDate(p.date,false)}</span></span><span><b style="color:var(--text-primary)">${fmtNum(p.w)} kg</b> <span class="muted small">(+${fmtNum(Math.round((p.w-p.prev)*10)/10)})</span></span></div>`).join(''):'<p class="muted small">Inga rekord än – logga vikter så dyker de upp här.</p>'}</div>
+      ${prs.length?prs.map(p=>`<div class="exline"><span>🏆 ${esc(p.name)} <span class="muted small">${fmtDate(p.date,false)}</span></span><span><b style="color:var(--text-primary)">${fmtNum(p.w)}${U(p.name)}</b> <span class="muted small">(+${fmtNum(Math.round((p.w-p.prev)*10)/10)})</span></span></div>`).join(''):'<p class="muted small">Inga rekord än – logga vikter så dyker de upp här.</p>'}</div>
     ${lastS?`<div class="seg"><b>Senaste passet</b></div>${sessionCard(lastS)}`:''}`;
 }
 function renderSuggest(){
@@ -1005,7 +1011,7 @@ function barChart(data){
   });
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Pass per vecka">${g}</svg>`;
 }
-function lineChart(pts){
+function lineChart(pts,u=' kg'){
   const W=640,H=220,pl=40,pr=14,pt=16,pb=26;
   const vals=pts.map(p=>p.value);let lo=Math.min(...vals),hi=Math.max(...vals);
   const padV=Math.max(2.5,(hi-lo)*.15);lo=Math.max(0,Math.floor((lo-padV)/5)*5);hi=Math.ceil((hi+padV)/5)*5;
@@ -1019,7 +1025,7 @@ function lineChart(pts){
   if(pts.length>1)g+=`<path d="${pts.map((p,i)=>(i?'L':'M')+x(p.date)+','+y(p.value)).join('')}" fill="none" stroke="var(--series-1)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
   pts.forEach(p=>{g+=`<circle cx="${x(p.date)}" cy="${y(p.value)}" r="4" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/><circle cx="${x(p.date)}" cy="${y(p.value)}" r="16" fill="transparent" data-tip="${esc(p.tip)}"/>`});
   const last=pts[pts.length-1];
-  g+=`<text x="${x(last.date)}" y="${y(last.value)-10}" text-anchor="${pts.length>1?'end':'middle'}" style="fill:var(--text-primary);font-weight:600">${fmtNum(last.value)} kg</text>`;
+  g+=`<text x="${x(last.date)}" y="${y(last.value)-10}" text-anchor="${pts.length>1?'end':'middle'}" style="fill:var(--text-primary);font-weight:600">${fmtNum(last.value)}${u}</text>`;
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Viktprogression">${g}</svg>`;
 }
 function activityGrid(weeks){
@@ -1069,10 +1075,10 @@ function renderStats(){
     const nm=exs.find(x=>x.name.toLowerCase()===selEx).name;
     exHtml=`<div class="row mb"><select id="exsel">${exs.map(x=>`<option value="${esc(x.name.toLowerCase())}" ${x.name.toLowerCase()===selEx?'selected':''}>${esc(x.name)} (${x.weighted})</option>`).join('')}</select>
       <button class="btn small" data-act="rename" data-name="${esc(nm)}">Byt namn</button></div>
-      <div class="small" style="margin-bottom:6px">Rekord <b>${fmtNum(pr)} kg</b> <span class="muted">(${fmtDate(prP.date,false)})</span> · Senast <b>${fmtNum(last.value)} kg</b>${pts.length>1?` · Förändring <b>${last.value-first.value>=0?'+':''}${fmtNum(Math.round((last.value-first.value)*10)/10)} kg</b>`:''}</div>
-      ${lineChart(pts)}
+      <div class="small" style="margin-bottom:6px">Rekord <b>${fmtNum(pr)}${U(nm)}</b> <span class="muted">(${fmtDate(prP.date,false)})</span> · Senast <b>${fmtNum(last.value)}${U(nm)}</b>${pts.length>1?` · Förändring <b>${last.value-first.value>=0?'+':''}${fmtNum(Math.round((last.value-first.value)*10)/10)}${U(nm)}</b>`:''}</div>
+      ${lineChart(pts,U(nm))}
       <details class="mt"><summary>Visa tabell</summary><table><tr><th>Datum</th><th>Tyngst</th><th>Detaljer</th></tr>
-      ${[...pts].reverse().map(p=>`<tr><td>${fmtDate(p.date,false)}</td><td>${fmtNum(p.value)} kg</td><td class="muted">${esc(p.tip.split('\n')[1])}</td></tr>`).join('')}</table></details>`;
+      ${[...pts].reverse().map(p=>`<tr><td>${fmtDate(p.date,false)}</td><td>${fmtNum(p.value)}${U(nm)}</td><td class="muted">${esc(p.tip.split('\n')[1])}</td></tr>`).join('')}</table></details>`;
   }
   view.innerHTML=`
     <div class="tiles">
