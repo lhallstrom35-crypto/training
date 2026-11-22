@@ -608,7 +608,7 @@ view.addEventListener('click',e=>{
       wasEdit?go('history'):render();
     },
     useTpl(){
-      const t=db.templates.find(t=>t.id===b.dataset.id);if(!t)return;
+      const t=b.dataset.id==='extra'?extraTemplate():db.templates.find(t=>t.id===b.dataset.id);if(!t)return;
       if(tab!=='log'){draft=newDraft()}
       loadTemplate(t);go('log');toast(`${t.name} inlagt – justera och spara`);
     },
@@ -833,7 +833,7 @@ function tplCard(t,{badge='',sub=''}={}){
     ${t.items.map(rot).map(it=>{const sg=suggestFor(it.name);
       return `<div class="exline"><span>${it.ss?`<span class="ss">${esc(it.ss)}</span> `:''}${esc(it.name)}<br><span class="muted small">${[it.sets&&it.reps?`${it.sets}×${esc(it.reps)}`:it.sets?`${it.sets} set`:esc(it.reps||''),sg?`senast ${fmtNum(sg.last)} kg · rekord ${fmtNum(sg.best)} kg`:'ny övning'].filter(Boolean).join(' · ')}</span></span>
       <span>${sg?(sg.up?`<b class="up">↑ ${fmtNum(sg.next)} kg</b>`:`${fmtNum(sg.next)} kg`):'–'}</span></div>`}).join('')}
-    <div class="row mt"><button class="btn primary block" data-act="useTpl" data-id="${t.id}">Starta passet</button><button class="btn small danger" data-act="delTpl" data-id="${t.id}" aria-label="Ta bort mall">✕</button></div>
+    <div class="row mt"><button class="btn primary block" data-act="useTpl" data-id="${t.id}">Starta passet</button>${t.id==='extra'?'':`<button class="btn small danger" data-act="delTpl" data-id="${t.id}" aria-label="Ta bort mall">✕</button>`}</div>
   </div>`;
 }
 
@@ -883,8 +883,23 @@ function recentPRs(n){ // nya rekord, senaste först
   }
   return out.reverse().slice(0,n);
 }
+// Extrapass (efter veckans 3 pass): en övning per muskelgrupp under 10 set, minst tränad först
+const NO_EXTRA=['latsdrag','pull-ups','hantelrodd','marklyft']; // användaren vill inte ha lats-fokus
+function extraTemplate(){
+  const mon=mondayOf(todayISO()),vol=weeklySets(mon);
+  const days=new Set(db.sessions.filter(s=>s.date>=mon&&s.date<=todayISO()).map(s=>s.date)).size;
+  if(days<3)return null;
+  const groups=VOL_GROUPS.filter(g=>vol[g].n<10).sort((a,b)=>vol[a].n-vol[b].n).slice(0,6);
+  if(!groups.length)return null;
+  const items=groups.map(g=>{
+    const pool=[...new Set(CATALOG[g].map(x=>x.split('|')[0]))].filter(n=>!NO_EXTRA.includes(n.toLowerCase()));
+    return{name:pool.map(n=>({n,d:lastDone(n)})).sort((a,b)=>a.d.localeCompare(b.d))[0].n,sets:Math.max(2,Math.min(4,10-vol[g].n)),reps:'8-12'};
+  });
+  return{id:'extra',name:'Extrapass',muscles:groups.map(muscleOfGroup),items,why:`Pass ${days+1} denna vecka – fyller på ${groups.join(', ')}`};
+}
 // Kör du helkroppsprogrammet föreslås nästa A/B/C, annars den dagstyp som vilat längst
 function nextTemplate(){
+  const ex=extraTemplate();if(ex)return{t:ex,why:ex.why};
   const fb=db.templates.filter(t=>t.prog==='fb');
   const lastFb=t=>{const s=db.sessions.find(s=>s.tpl===t.id);return s?s.date:''};
   if(fb.some(lastFb))return{t:[...fb].sort((a,b)=>lastFb(a).localeCompare(lastFb(b)))[0],why:'Nästa i helkroppsprogrammet'};
@@ -963,6 +978,7 @@ function renderSuggest(){
     <div class="small muted mt">Bygger på sammanfattningen du klistrade in från en enskild studie. Ta det som en riktlinje, inte en exakt sanning.</div>
   </div>
 
+  ${(ex=>ex?`<div class="seg"><b>Extrapass</b></div>${tplCard(ex,{badge:'Nästa',sub:esc(ex.why)})}`:'')(extraTemplate())}
   ${fb.length?`<div class="seg"><b>Helkropp 3 dagar/vecka med supersets</b></div>
   <div class="muted small" style="margin-bottom:10px">Kör A, B och C med minst en vilodag emellan, t.ex. mån–ons–fre. Övningar med samma bokstav (A1 + A2) är ett superset: kör A1, direkt A2, vila ~90 s, upprepa. ${fbDone?`Denna vecka: <b>${fbDone} av 3</b> helkroppspass.`:''}</div>
   ${fb.map(t=>{const l=lastFb(t);return tplCard(t,{badge:t===nextFb?'Nästa':'',sub:(l?`Senast ${fmtDate(l,false)}`:'Inte kört än')+' · hela kroppen'})}).join('')}`:''}
