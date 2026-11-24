@@ -402,7 +402,7 @@ const DEFAULT_TEMPLATES=[
 DEFAULT_TEMPLATES.push(
   {id:'fb-a',prog:'fb',name:'Helkropp A',muscles:['Bröst','Rygg','Ben','Core','Biceps','Triceps'],items:[
     {ss:'A1',name:'Incline maskin',alt:['Incline hantelpress','Incline smithpress'],sets:4,reps:'6-10'},{ss:'A2',name:'Chest supported row',alt:['Rev fly'],sets:4,reps:'8-12'},
-    {ss:'B1',name:'Bulgarian split squat',alt:['Rumänsk marklyft'],sets:3,reps:'8-10'},{ss:'B2',name:'Hängande leg raise',alt:['Leg raise'],sets:3,reps:'10-15'},
+    {ss:'B1',name:'Bulgarian split squat',alt:['Rumänsk marklyft'],sets:3,reps:'8-10'},{ss:'B2',name:'Hängande leg raise',alt:['Liggande benlyft'],sets:3,reps:'10-15'},
     {ss:'C1',name:'Sittande curl maskin',alt:['Preacher curl (biceps)'],sets:3,reps:'10-12'},{ss:'C2',name:'Overhead tri',alt:['Skull crushers (triceps)'],sets:3,reps:'10-12'}]},
   {id:'fb-b',prog:'fb',name:'Helkropp B',muscles:['Bröst','Rygg','Ben','Biceps','Triceps','Axlar','Vader'],items:[
     {ss:'A1',name:'Chest press',alt:['Dips'],sets:4,reps:'8-12'},{ss:'A2',name:'Wide grip row',alt:['Kelso shrug'],sets:4,reps:'8-12'},
@@ -425,6 +425,7 @@ function migrate(){
     for(const t of db.templates)for(const it of t.items){it.name=rn(it.name);if(it.alt)it.alt=it.alt.map(rn)}
     for(const c of db.customEx||[])c.name=rn(c.name);
     db.renamed1=true}
+  if(!db.renamed2){for(const t of db.templates)for(const it of t.items)if(it.alt)it.alt=it.alt.map(n=>n==='Leg raise'?'Liggande benlyft':n);db.renamed2=true}
 }
 if(!db||!Array.isArray(db.sessions)){db={sessions:[]};importText(document.getElementById('seed').textContent,'2026-10-05')}
 migrate();save();
@@ -676,7 +677,7 @@ const CATALOG={
   'Axlar':['Axelpress','Side delt','Rear delt','Face pulls (bakre axel)','Front raises'],
   'Ben':['Bulgarian split squat','Utfall','Knäböj','Benpress','Lårcurl','Benspark','Rumänsk marklyft'],
   'Vader':['Vadpress','Stående vadpress'],
-  'Mage & core':['Weighted ab|Mage','Kabelcrunch|Mage','Obq stående|Sneda mage','Russian twist|Sneda mage','Sidoplanka|Sneda mage','Hängande leg raise|Core','Leg raise|Core','Planka|Core'],
+  'Mage & core':['Weighted ab|Mage','Kabelcrunch|Mage','Obq stående|Sneda mage','Russian twist|Sneda mage','Sidoplanka|Sneda mage','Hängande leg raise|Core','Liggande benlyft|Core','Planka|Core'],
   'Underarmar':['Underarmscurl','Omvänd curl','Farmers walk'],
 };
 const GROUPS=[...Object.keys(CATALOG),'Övrigt'];
