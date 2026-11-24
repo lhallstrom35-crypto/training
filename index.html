@@ -283,7 +283,7 @@ const IMPLIED=[[/curl|\bbi\b/,'Biceps'],[/^incline(?!.*\bbi\b)|chest p(ress|r)?\
 const ALIASES={'chest p':'chest press','chest pr':'chest press','seated curl':'sittande curl maskin',
   'bänk press':'bänkpress','bench press':'bänkpress','leg raises':'leg raise','hangling leg raise i maskin':'hängande leg raise',
   'bulg split squat':'bulgarian split squat','chest support row':'chest supported row','chest row':'chest supported row',
-  'over heard tri':'overhead tri','cable curls':'cable curl','one arm':'triceps one arm','rows wide grip':'wide grip row'};
+  'over heard tri':'overhead tri','cable curls':'kabelcurl','cable curl':'kabelcurl','one arm':'triceps one arm','rows wide grip':'wide grip row'};
 
 function mkEx(name,sets,note){
   name=name.replace(/[@:\s-]+$/,'').replace(/\s+/g,' ').trim().toLowerCase();
@@ -401,24 +401,30 @@ const DEFAULT_TEMPLATES=[
 // Helkropp 3 dagar/vecka med supersets (A1+A2 osv. körs direkt efter varandra)
 DEFAULT_TEMPLATES.push(
   {id:'fb-a',prog:'fb',name:'Helkropp A',muscles:['Bröst','Rygg','Ben','Core','Biceps','Triceps'],items:[
-    {ss:'A1',name:'Incline maskin',alt:['Incline hantel','Incline smith'],sets:4,reps:'6-10'},{ss:'A2',name:'Chest supported row',alt:['Rev fly'],sets:4,reps:'8-12'},
+    {ss:'A1',name:'Incline maskin',alt:['Incline hantelpress','Incline smithpress'],sets:4,reps:'6-10'},{ss:'A2',name:'Chest supported row',alt:['Rev fly'],sets:4,reps:'8-12'},
     {ss:'B1',name:'Bulgarian split squat',alt:['Rumänsk marklyft'],sets:3,reps:'8-10'},{ss:'B2',name:'Hängande leg raise',alt:['Leg raise'],sets:3,reps:'10-15'},
-    {ss:'C1',name:'Sittande curl maskin',alt:['Preacher curl'],sets:3,reps:'10-12'},{ss:'C2',name:'Overhead tri',alt:['Skull crushers'],sets:3,reps:'10-12'}]},
+    {ss:'C1',name:'Sittande curl maskin',alt:['Preacher curl (biceps)'],sets:3,reps:'10-12'},{ss:'C2',name:'Overhead tri',alt:['Skull crushers (triceps)'],sets:3,reps:'10-12'}]},
   {id:'fb-b',prog:'fb',name:'Helkropp B',muscles:['Bröst','Rygg','Ben','Biceps','Triceps','Axlar','Vader'],items:[
     {ss:'A1',name:'Chest press',alt:['Dips'],sets:4,reps:'8-12'},{ss:'A2',name:'Wide grip row',alt:['Kelso shrug'],sets:4,reps:'8-12'},
     {ss:'B1',name:'Utfall',alt:['Lårcurl'],sets:3,reps:'10-12'},{ss:'B2',name:'Vadpress',alt:['Stående vadpress'],sets:3,reps:'12-15'},
-    {ss:'C1',name:'Incline bi',alt:['Cable curl'],sets:3,reps:'10-12'},{ss:'C2',name:'Triceps pushdown',sets:3,reps:'10-12'},
-    {ss:'D1',name:'Side delt',alt:['Axelpress'],sets:3,reps:'12-15'},{ss:'D2',name:'Rear delt',alt:['Face pulls'],sets:3,reps:'12-15'}]},
+    {ss:'C1',name:'Incline bi',alt:['Kabelcurl'],sets:3,reps:'10-12'},{ss:'C2',name:'Triceps pushdown',sets:3,reps:'10-12'},
+    {ss:'D1',name:'Side delt',alt:['Axelpress'],sets:3,reps:'12-15'},{ss:'D2',name:'Rear delt',alt:['Face pulls (bakre axel)'],sets:3,reps:'12-15'}]},
   {id:'fb-c',prog:'fb',name:'Helkropp C',muscles:['Bröst','Rygg','Ben','Mage','Biceps','Triceps'],items:[
-    {ss:'A1',name:'Bänkpress',alt:['Pec deck','Cable flyes'],sets:4,reps:'6-10'},{ss:'A2',name:'Rows maskin',alt:['Wide grip row'],sets:4,reps:'8-12'},
-    {ss:'B1',name:'Benpress',alt:['Knäböj'],sets:3,reps:'10-12'},{ss:'B2',name:'Weighted ab',alt:['Cable crunch'],sets:3,reps:'12-15'},
-    {ss:'C1',name:'Hammer curl',alt:['Barbell curl'],sets:3,reps:'10-12'},{ss:'C2',name:'Triceps one arm',sets:3,reps:'10-12'}]}
+    {ss:'A1',name:'Bänkpress',alt:['Pec deck (bröstflyes)','Kabelflyes'],sets:4,reps:'6-10'},{ss:'A2',name:'Rows maskin',alt:['Wide grip row'],sets:4,reps:'8-12'},
+    {ss:'B1',name:'Benpress',alt:['Knäböj'],sets:3,reps:'10-12'},{ss:'B2',name:'Weighted ab',alt:['Kabelcrunch'],sets:3,reps:'12-15'},
+    {ss:'C1',name:'Hammer curl',alt:['Skivstångscurl'],sets:3,reps:'10-12'},{ss:'C2',name:'Triceps one arm',sets:3,reps:'10-12'}]}
 );
 function migrate(){
   if(!Array.isArray(db.templates))db.templates=JSON.parse(JSON.stringify(DEFAULT_TEMPLATES));
   if(!db.fbAdded){const ids=new Set(db.templates.map(t=>t.id));DEFAULT_TEMPLATES.filter(t=>t.prog&&!ids.has(t.id)).forEach(t=>db.templates.push(JSON.parse(JSON.stringify(t))));db.fbAdded=true}
   if((db.fbVer||1)<2){db.templates=db.templates.map(t=>{const d=DEFAULT_TEMPLATES.find(x=>x.prog&&x.id===t.id);return d?JSON.parse(JSON.stringify(d)):t});db.fbVer=2}
   if(db.fbVer<4){db.templates.forEach(t=>{const d=DEFAULT_TEMPLATES.find(x=>x.prog&&x.id===t.id);if(d)t.items.forEach(it=>{const di=d.items.find(x=>x.ss===it.ss);if(di&&di.alt)it.alt=di.alt})});db.fbVer=4}
+  if(!db.renamed1){ // tydligare övningsnamn, även i historiken
+    const RN={'incline hantel':'Incline hantelpress','incline smith':'Incline smithpress','pec deck':'Pec deck (bröstflyes)','cable flyes':'Kabelflyes','preacher curl':'Preacher curl (biceps)','barbell curl':'Skivstångscurl','cable curl':'Kabelcurl','skull crushers':'Skull crushers (triceps)','face pulls':'Face pulls (bakre axel)','cable crunch':'Kabelcrunch'},rn=n=>RN[(n||'').toLowerCase()]||n;
+    for(const x of db.sessions||[])for(const e of x.exercises)e.name=rn(e.name);
+    for(const t of db.templates)for(const it of t.items){it.name=rn(it.name);if(it.alt)it.alt=it.alt.map(rn)}
+    for(const c of db.customEx||[])c.name=rn(c.name);
+    db.renamed1=true}
 }
 if(!db||!Array.isArray(db.sessions)){db={sessions:[]};importText(document.getElementById('seed').textContent,'2026-10-05')}
 migrate();save();
@@ -663,14 +669,14 @@ view.addEventListener('click',e=>{
 /* ---------- Övningsväljare ---------- */
 // "Namn|Muskelgrupp" när övningen ska räknas till en annan grupp än kategorin
 const CATALOG={
-  'Bröst':['Incline maskin','Incline smith','Incline hantel','Chest press','Bänkpress','Flyes','Cable flyes','Pec deck','Dips'],
+  'Bröst':['Incline maskin','Incline smithpress','Incline hantelpress','Chest press','Bänkpress','Flyes','Kabelflyes','Pec deck (bröstflyes)','Dips'],
   'Rygg':['Chest supported row','Wide grip row','Rows maskin','Latsdrag','Pull-ups','Hantelrodd','Rev fly','Kelso shrug','Marklyft'],
-  'Biceps':['Sittande curl maskin','Bi maskin','Barbell curl','Hammer curl','Incline bi','Cable curl','Preacher curl'],
-  'Triceps':['Overhead tri','Triceps one arm','Triceps pushdown','Skull crushers','Dips|Triceps'],
-  'Axlar':['Axelpress','Side delt','Rear delt','Face pulls','Front raises'],
+  'Biceps':['Sittande curl maskin','Bi maskin','Skivstångscurl','Hammer curl','Incline bi','Kabelcurl','Preacher curl (biceps)'],
+  'Triceps':['Overhead tri','Triceps one arm','Triceps pushdown','Skull crushers (triceps)','Dips|Triceps'],
+  'Axlar':['Axelpress','Side delt','Rear delt','Face pulls (bakre axel)','Front raises'],
   'Ben':['Bulgarian split squat','Utfall','Knäböj','Benpress','Lårcurl','Benspark','Rumänsk marklyft'],
   'Vader':['Vadpress','Stående vadpress'],
-  'Mage & core':['Weighted ab|Mage','Cable crunch|Mage','Obq stående|Sneda mage','Russian twist|Sneda mage','Sidoplanka|Sneda mage','Hängande leg raise|Core','Leg raise|Core','Planka|Core'],
+  'Mage & core':['Weighted ab|Mage','Kabelcrunch|Mage','Obq stående|Sneda mage','Russian twist|Sneda mage','Sidoplanka|Sneda mage','Hängande leg raise|Core','Leg raise|Core','Planka|Core'],
   'Underarmar':['Underarmscurl','Omvänd curl','Farmers walk'],
 };
 const GROUPS=[...Object.keys(CATALOG),'Övrigt'];
