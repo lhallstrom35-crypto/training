@@ -426,6 +426,7 @@ function migrate(){
     for(const c of db.customEx||[])c.name=rn(c.name);
     db.renamed1=true}
   if(!db.renamed2){for(const t of db.templates)for(const it of t.items)if(it.alt)it.alt=it.alt.map(n=>n==='Leg raise'?'Liggande benlyft':n);db.renamed2=true}
+  if(!db.renamed3){for(const x of db.sessions||[])for(const e of x.exercises)if(/^face pulls?$/i.test(e.name.trim()))e.name='Face pulls (bakre axel)';db.renamed3=true}
 }
 if(!db||!Array.isArray(db.sessions)){db={sessions:[]};importText(document.getElementById('seed').textContent,'2026-10-05')}
 migrate();save();
@@ -611,7 +612,7 @@ view.addEventListener('click',e=>{
     },
     save(){
       const s={...draft,id:draft.id||uid()};
-      s.exercises=s.exercises.map(e=>({...e,name:cap(e.name.trim()),unit:exU(e)==='s'?'s':undefined,sets:e.sets.filter(x=>x.w!=null||x.sets||x.reps).map(({target,...x})=>x)})).filter(e=>e.name);
+      s.exercises=s.exercises.map(e=>({...e,name:canonEx(cap(e.name.trim())),unit:exU(e)==='s'?'s':undefined,sets:e.sets.filter(x=>x.w!=null||x.sets||x.reps).map(({target,...x})=>x)})).filter(e=>e.name);
       s.cardio=s.cardio.filter(c=>c.type||c.kcal||c.min);
       if(!s.date){toast('Välj datum');return}
       if(!s.muscles.length&&!s.exercises.length&&!s.cardio.length&&!s.notes){toast('Passet är tomt');return}
@@ -819,7 +820,10 @@ function suggestFor(name){
   return{last:last.w,best,date:last.date,up,next:up?last.w+(unitOf(name)==='s'?5:2.5):last.w};
 }
 // Plats med alternativ (alt): välj den variant som gjordes längst sedan, så passen roterar
-function lastDone(name){const k=name.toLowerCase(),s=db.sessions.find(s=>s.exercises.some(e=>e.name.toLowerCase()===k));return s?s.date:''}
+// "Face pull" = "Face pulls (bakre axel)": ignorera parentes, versaler och plural-s
+const normEx=n=>(n||'').toLowerCase().replace(/\(.*?\)/g,'').trim().replace(/s$/,'');
+function canonEx(n){const k=normEx(n);for(const g in CATALOG)for(const x of CATALOG[g]){const c=x.split('|')[0];if(normEx(c)===k)return c}return n}
+function lastDone(name){const k=normEx(name),s=db.sessions.find(s=>s.exercises.some(e=>normEx(e.name)===k));return s?s.date:''}
 function rot(it){
   if(!it.alt||!it.alt.length)return it;
   const name=[it.name,...it.alt].map(n=>({n,d:lastDone(n)})).sort((a,b)=>a.d.localeCompare(b.d))[0].n;
